@@ -55,6 +55,30 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=sha
 
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools
+
+      - name: Setup architecture names
+        run: |
+          if [ "${{ matrix.platform }}" = "linux/amd64" ]; then
+            echo "ARCH=x86_64" >> $GITHUB_ENV
+          elif [ "${{ matrix.platform }}" = "linux/arm64" ]; then
+            echo "ARCH=aarch64" >> $GITHUB_ENV
+          fi
+
+      - name: Add Rust target
+        run: |
+          if [ "$ARCH" = "x86_64" ]; then
+            rustup target add x86_64-unknown-linux-musl
+          elif [ "$ARCH" = "aarch64" ]; then
+            rustup target add aarch64-unknown-linux-musl
+          fi
+
+      - name: Build HorizOS Rootfs
+        run: bash scripts/build_rootfs.sh
+
       - name: Build and push by digest
         id: build
         uses: docker/build-push-action@v5

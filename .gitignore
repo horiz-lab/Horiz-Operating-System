@@ -1,0 +1,15 @@
+# OS build artifacts
+build/
+*.img
+*.bin
+*.tar.gz
+
+# Rust build artifacts
+target/
+horiz-core/target/
+
+# Local environment
+.env
+
+# MacOS related
+.DS_Store
