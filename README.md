@@ -7,11 +7,12 @@ x86_64 および aarch64 アーキテクチャをサポート。
 
 - **horiz-core/**: Userland ロジック。システム本体の機能を実装するコア・コンポーネント。
   - **crates/horiz-init**: システムの初期化・プロセス管理。
+  - **crates/horiz-pkg**: パッケージ管理システム。
   - **crates/horiz-sh**: インタラクティブ・シェル。
   - **crates/horiz-utils**: 基本的なコマンド群（ls, cat, echo等）。
 - **rootfs/**: OS スケルトン (テンプレート)。設定ファイルやディレクトリ構造の雛形。
 - **scripts/**: 各種ビルド・自動化スクリプト。
-- **build.sh**: Alpine Linux をベースとした、迅速な rootfs 構築スクリプト。
+- **build.sh**: スクラッチビルドによる迅速な rootfs 構築・統合スクリプト。
 
 ## [コンポーネント]
 
