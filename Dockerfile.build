@@ -12,10 +12,12 @@ RUN apt-get update && apt-get install -y \
     libssl-dev \
     libelf-dev \
     bc \
-    git
+    git \
+    gcc-aarch64-linux-gnu
 
-# Add musl target for static linking
+# Add musl targets for static linking
 RUN rustup target add x86_64-unknown-linux-musl
+RUN rustup target add aarch64-unknown-linux-musl
 
 WORKDIR /horizos
 COPY . .

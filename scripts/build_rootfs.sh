@@ -7,7 +7,13 @@ echo "[報告] Rust 版 Userland (Horiz-Core) ビルドプロセスを開始。"
 cd horiz-core
 
 # Rustバイナリのビルド (musl ターゲットでスタティックリンク)
-cargo build --release --target x86_64-unknown-linux-musl
+RUST_TARGET="x86_64-unknown-linux-musl"
+if [ "$ARCH" = "aarch64" ]; then
+    RUST_TARGET="aarch64-unknown-linux-musl"
+fi
+
+echo "[報告] ターゲット ${RUST_TARGET} でビルドを実行。"
+cargo build --release --target ${RUST_TARGET}
 
 # バイナリの配置
 cd ..
@@ -23,10 +29,10 @@ fi
 
 mkdir -p "$BIN_DIR"
 
-cp horiz-core/target/x86_64-unknown-linux-musl/release/horiz-init "$BIN_DIR/init"
-cp horiz-core/target/x86_64-unknown-linux-musl/release/horiz-init "$BIN_DIR/init"
-cp horiz-core/target/x86_64-unknown-linux-musl/release/horiz-sh "$BIN_DIR/sh"
-cp horiz-core/target/x86_64-unknown-linux-musl/release/horiz-utils "$BIN_DIR/horiz-utils"
+TARGET_DIR="horiz-core/target/${RUST_TARGET}/release"
+cp "${TARGET_DIR}/horiz-init" "$BIN_DIR/init"
+cp "${TARGET_DIR}/horiz-sh" "$BIN_DIR/sh"
+cp "${TARGET_DIR}/horiz-utils" "$BIN_DIR/horiz-utils"
 
 # ユーティリティのシンボリックリンク作成
 ln -sf horiz-utils "$BIN_DIR/ls"

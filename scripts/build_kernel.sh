@@ -20,17 +20,31 @@ if [ ! -d linux-${KERNEL_VERSION} ]; then
     tar xf linux.tar.xz
 fi
 
+# アーキテクチャ固有の設定
+ARCH="${ARCH:-x86_64}"
+CROSS_COMPILE=""
+KCONFIG="defconfig"
+
+if [ "$ARCH" = "aarch64" ]; then
+    CROSS_COMPILE="aarch64-linux-gnu-"
+    # aarch64 では defconfig が汎用的な初期設定として機能する
+    KCONFIG="defconfig"
+fi
+
 cd linux-${KERNEL_VERSION}
 
-# WSL2向けの設定を適用
-echo "[報告] カーネルを構成中 (WSL2 互換)..."
-# 注意: 本来はMicrosoftのWSL2カーネル設定をベースにするべきだが、
-# ここでは基礎的なx86_64設定を適用する。
-make defconfig
-# WSL2に必要な特定のフラグ（仮想化対応等）が必要ならばここで編集
+# 設定の適用
+echo "[報告] カーネルを構成中 (ARCH: ${ARCH}, CONFIG: ${KCONFIG})..."
+make ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} ${KCONFIG}
 
 # ビルド
 echo "[報告] カーネルをコンパイル中..."
-make -j$(nproc)
+make ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} -j$(nproc)
 
-echo "[報告] ビルド完了: arch/x86/boot/bzImage"
+if [ "$ARCH" = "x86_64" ]; then
+    KERNEL_IMAGE="arch/x86/boot/bzImage"
+else
+    KERNEL_IMAGE="arch/arm64/boot/Image"
+fi
+
+echo "[報告] ビルド完了: ${KERNEL_IMAGE}"

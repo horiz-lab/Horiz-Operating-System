@@ -5,10 +5,19 @@ set -e
 # Base: Alpine Linux Mini Rootfs
 
 ALPINE_VERSION="3.19.1"
-ARCH="x86_64"
-ROOTFS_URL="https://dl-cdn.alpinelinux.org/alpine/v${ALPINE_VERSION:0:4}/releases/${ARCH}/alpine-minirootfs-${ALPINE_VERSION}-${ARCH}.tar.gz"
+ARCH="${ARCH:-x86_64}"
 
-echo "[報告] HorizOS ビルドプロセスを開始。"
+# アーキテクチャ名の正規化 (aarch64 -> arm64 for Alpine URL)
+ALPINE_ARCH="$ARCH"
+if [ "$ARCH" = "aarch64" ]; then
+    ALPINE_ARCH="aarch64"
+elif [ "$ARCH" = "x86_64" ]; then
+    ALPINE_ARCH="x86_64"
+fi
+
+ROOTFS_URL="https://dl-cdn.alpinelinux.org/alpine/v${ALPINE_VERSION:0:4}/releases/${ALPINE_ARCH}/alpine-minirootfs-${ALPINE_VERSION}-${ALPINE_ARCH}.tar.gz"
+
+echo "[報告] HorizOS ビルドプロセスを開始 (ARCH: ${ARCH})。"
 
 # ワークディレクトリの作成
 ROOTFS_DIR="build/rootfs"
