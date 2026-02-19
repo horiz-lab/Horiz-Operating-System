@@ -27,7 +27,8 @@ KCONFIG="defconfig"
 
 if [ "$ARCH" = "aarch64" ]; then
     CROSS_COMPILE="aarch64-linux-gnu-"
-    # aarch64 では defconfig が汎用的な初期設定として機能する
+    # Linux カーネルビルドシステムでは arm64 を使用する
+    ARCH="arm64"
     KCONFIG="defconfig"
 fi
 
