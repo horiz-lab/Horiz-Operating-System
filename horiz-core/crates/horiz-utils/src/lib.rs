@@ -40,3 +40,20 @@ pub fn echo(args: Vec<String>) {
     println!("{}", args.join(" "));
 }
 
+/// パスを正規化してディレクトリトラバーサルを防ぐ (Zero-Dependency)
+pub fn normalize_path(path: &str) -> String {
+    let mut stack = Vec::new();
+    for component in path.split('/') {
+        match component {
+            "" | "." => continue,
+            ".." => {
+                stack.pop();
+            }
+            _ => {
+                stack.push(component);
+            }
+        }
+    }
+    format!("/{}", stack.join("/"))
+}
+

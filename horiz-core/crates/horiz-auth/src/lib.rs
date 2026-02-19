@@ -155,7 +155,18 @@ pub fn verify_login(username: &str, password: &str) -> io::Result<bool> {
             let salt = segments[2];
             let expected_hash = segments[3];
             let computed_hash = hash_password(password, salt);
-            return Ok(computed_hash == expected_hash);
+
+            // Constant-time comparison to mitigate timing attacks
+            if computed_hash.len() != expected_hash.len() {
+                return Ok(false);
+            }
+            let mut res = 0u8;
+            let a_bytes = computed_hash.as_bytes();
+            let b_bytes = expected_hash.as_bytes();
+            for i in 0..a_bytes.len() {
+                res |= a_bytes[i] ^ b_bytes[i];
+            }
+            return Ok(res == 0);
         }
     }
     Ok(false)
@@ -164,6 +175,14 @@ pub fn verify_login(username: &str, password: &str) -> io::Result<bool> {
 pub fn generate_shadow_entry(password: &str, salt: &str) -> String {
     let hash = hash_password(password, salt);
     format!("$hz${}${}", salt, hash)
+}
+
+/// セキュアなソルトを生成 (CSPRNG - Zero-Dependency)
+pub fn generate_salt() -> io::Result<String> {
+    let mut buf = [0u8; 16];
+    let mut f = fs::File::open("/dev/urandom")?;
+    io::Read::read_exact(&mut f, &mut buf)?;
+    Ok(base64_encode(&buf))
 }
 
 #[cfg(test)]

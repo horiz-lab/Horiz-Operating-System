@@ -53,6 +53,8 @@ fn parse_args() -> Result<Args, String> {
 }
 
 // --- Minimal Custom HTTP/1.1 Client (Zero-Dependency) ---
+const MAX_RESPONSE_SIZE: usize = 100 * 1024 * 1024; // 100MB limit
+
 fn http_get(url: &str) -> io::Result<Vec<u8>> {
     let stripped = url.strip_prefix("http://").ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "Only http:// is supported in zero-dep mode"))?;
     let (host_port, path) = match stripped.find('/') {
@@ -73,7 +75,15 @@ fn http_get(url: &str) -> io::Result<Vec<u8>> {
     stream.write_all(request.as_bytes())?;
 
     let mut response = Vec::new();
-    stream.read_to_end(&mut response)?;
+    let mut buffer = [0u8; 8192];
+    loop {
+        let n = stream.read(&mut buffer)?;
+        if n == 0 { break; }
+        if response.len() + n > MAX_RESPONSE_SIZE {
+            return Err(io::Error::new(io::ErrorKind::Other, "[拒否] レスポンスが制限サイズ (100MB) を超えました。DoS攻撃を検知したため中断します。"));
+        }
+        response.extend_from_slice(&buffer[..n]);
+    }
 
     if let Some(pos) = response.windows(4).position(|w| w == b"\r\n\r\n") {
         let header = String::from_utf8_lossy(&response[..pos]);
@@ -89,6 +99,7 @@ fn http_get(url: &str) -> io::Result<Vec<u8>> {
 fn main() -> io::Result<()> {
     let args = parse_args().map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
     let target_path = format!("/bin/{}", args.name);
+    let tmp_path = format!("/bin/{}.tmp", args.name);
     let sig_url = format!("{}.sig", args.url);
 
     println!("[報告] パッケージ本体をロード中: {}", args.url);
@@ -123,22 +134,27 @@ fn main() -> io::Result<()> {
         return Err(io::Error::new(io::ErrorKind::PermissionDenied, "[警告] 署名検証に失敗しました。不正なバイナリです。"));
     }
 
-    println!("[報告] 検証成功。バイナリを配置します。");
-    fs::write(&target_path, &data)?;
+    println!("[報告] 検証成功。バイナリを配置します（原子的な配置）... ");
+    // TOCTOU 対策: 一時ファイルに書いてからリネーム
+    fs::write(&tmp_path, &data)?;
 
     // 書込後の再検証用（デバッグ/開発用ログ）
-    let verification_hash = sha512::sha512(&fs::read(&target_path)?);
+    let verification_hash = sha512::sha512(&fs::read(&tmp_path)?);
     if content_hash != verification_hash {
+        let _ = fs::remove_file(&tmp_path);
         return Err(io::Error::new(io::ErrorKind::WriteZero, "[エラー] 書き込み後のデータ整合性チェックに失敗しました。"));
     }
 
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
-        let mut perms = fs::metadata(&target_path)?.permissions();
+        let mut perms = fs::metadata(&tmp_path)?.permissions();
         perms.set_mode(0o755);
-        fs::set_permissions(&target_path, perms)?;
+        fs::set_permissions(&tmp_path, perms)?;
     }
+
+    // 原子的な置換
+    fs::rename(&tmp_path, &target_path)?;
 
     println!("[報告] インストール完了: {}", target_path);
     Ok(())

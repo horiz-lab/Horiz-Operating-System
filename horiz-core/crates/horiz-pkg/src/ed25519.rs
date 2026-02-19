@@ -138,11 +138,26 @@ impl Point {
     }
 
     pub fn add(&self, other: &Self) -> Self {
+        // Correct Ed25519 coordinate addition (Point addition on Twisted Edwards curve)
+        // A = (Y1-X1)*(Y2-X2), B = (Y1+X1)*(Y2+X1), C = T1*2*d*T2, D = Z1*2*Z2, 
+        // E = B-A, F = D-C, G = D+C, H = B+A
+        // X3 = E*F, Y3 = G*H, T3 = E*H, Z3 = F*G
+        
+        let a = self.y.sub(&self.x).mul(&other.y.sub(&other.x));
+        let b = self.y.add(&self.x).mul(&other.y.add(&other.x));
+        let c = self.t.mul(&Self::D).mul_small(2).mul(&other.t);
+        let d = self.z.mul(&other.z).mul_small(2);
+        
+        let e = b.sub(&a);
+        let f = d.sub(&c);
+        let g = d.add(&c);
+        let h = b.add(&a);
+        
         Point {
-            x: self.x.add(&other.x),
-            y: self.y.add(&other.y),
-            z: self.z.add(&other.z),
-            t: self.t.add(&other.t),
+            x: e.mul(&f),
+            y: g.mul(&h),
+            z: f.mul(&g),
+            t: e.mul(&h),
         }
     }
 
@@ -190,10 +205,25 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_field_element_basic() {
-        let a = FieldElement::ONE;
-        let b = FieldElement::ONE;
-        let c = a.add(&b);
-        assert_eq!(c.0[0], 2);
+    fn test_fuzz_addition_robustness() {
+        // Simple LCG for pseudo-randomness (Zero-Dependency)
+        let mut seed = 0x12345678u64;
+        let mut next_rand = || {
+            seed = seed.wrapping_mul(6364136223846793005).wrapping_add(1);
+            seed
+        };
+
+        for _ in 0..1000 {
+            let mut buf = [0u8; 32];
+            for b in buf.iter_mut() { *b = next_rand() as u8; }
+            let p1 = Point::from_bytes(&buf).unwrap();
+            
+            for b in buf.iter_mut() { *b = next_rand() as u8; }
+            let p2 = Point::from_bytes(&buf).unwrap();
+            
+            let p3 = p1.add(&p2);
+            // Verify no panics and basic property: Z should not be zero in normal cases
+            assert!(p3.z.0.iter().any(|&x| x != 0));
+        }
     }
 }
