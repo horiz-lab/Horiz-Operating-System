@@ -4,4 +4,6 @@
 FROM scratch
 ADD horiz-rootfs.tar.gz /
 
+USER horiz
+
 CMD ["/bin/sh"]

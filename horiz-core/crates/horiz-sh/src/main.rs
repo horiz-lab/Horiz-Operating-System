@@ -45,7 +45,7 @@ fn main() {
                 println!("{}", user);
             }
             "version" => {
-                println!("HorizOS Shell v1.2.0 (Custom Ownership Edition)");
+                println!("HorizOS Shell v1.2.1 (Custom Ownership Edition)");
             }
             _ => {
                 match Command::new(cmd).args(args).status() {
