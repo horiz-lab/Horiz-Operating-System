@@ -1,0 +1,24 @@
+# Horiz-Core-RS Build Environment
+
+FROM rust:1.76-slim-bookworm
+
+RUN apt-get update && apt-get install -y \
+    musl-tools \
+    build-essential \
+    curl \
+    xz-utils \
+    bison \
+    flex \
+    libssl-dev \
+    libelf-dev \
+    bc \
+    git
+
+# Add musl target for static linking
+RUN rustup target add x86_64-unknown-linux-musl
+
+WORKDIR /horizos
+COPY . .
+
+# Environment for kernel build is also included
+CMD ["echo", "[報告] Rust/Kernel ビルド環境の準備完了。"]
