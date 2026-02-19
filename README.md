@@ -1,4 +1,4 @@
-# HorizOS (Horiz-Operating-System)
+# HorizOS (Horiz-Operating-System) v1.0.0
 
 基礎から設計された、WSL2およびDocker向けの純粋なUNIX系OS。
 x86_64 および aarch64 アーキテクチャをサポート。
