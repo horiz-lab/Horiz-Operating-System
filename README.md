@@ -1,4 +1,4 @@
-# HorizOS (Horiz-Operating-System) v0.5.0 (Security Hardened)
+# HorizOS (Horiz-Operating-System)
 
 基礎から設計された、WSL2およびDocker向けの純粋なUNIX系OS。
 x86_64 および aarch64 アーキテクチャをサポート。
@@ -51,7 +51,7 @@ x86_64 および aarch64 アーキテクチャをサポート。
 ## [使用方法]
 
 1. **WSL2 / Docker**:
-    `horizos-rootfs.tar.gz` をインポートして使用せよ。
+    `horizos-rootfs.tar.gz` をインポートして使用。
 
 2. **仮想マシン**:
-    `horizos-{ARCH}.iso` を使用して、QEMU 等の仮想マシンプラットフォームで起動せよ。
+    `horizos-{ARCH}.iso` を使用して、QEMU 等の仮想マシンプラットフォームで起動。
