@@ -115,16 +115,16 @@ jobs:
 
       - name: Rename Assets
         run: |
-          mv horizos-rootfs.tar.gz horizos-rootfs-${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}.tar.gz
-          mv horizos-${{ env.ARCH }}.iso horizos-${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}.iso
+          mv horiz-rootfs.tar.gz horiz-rootfs-${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}.tar.gz
+          mv horiz-${{ env.ARCH }}.iso horiz-${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}.iso
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: assets-${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}
           path: |
-            horizos-rootfs-*.tar.gz
-            horizos-*.iso
+            horiz-rootfs-*.tar.gz
+            horiz-*.iso
           retention-days: 1
 
   merge:
@@ -194,6 +194,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            release-assets/horizos-rootfs-*.tar.gz
-            release-assets/horizos-*.iso
+            release-assets/horiz-rootfs-*.tar.gz
+            release-assets/horiz-*.iso
           generate_release_notes: true

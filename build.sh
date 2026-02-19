@@ -16,5 +16,5 @@ bash scripts/build_rootfs.sh
 # カーネルのビルド（必要に応じて）
 # bash scripts/build_kernel.sh
 
-echo "[報告] 全てのビルドプロセスが完了。horizos-rootfs.tar.gz を確認せよ。"
+echo "[報告] 全てのビルドプロセスが完了。horiz-rootfs.tar.gz を確認せよ。"
 

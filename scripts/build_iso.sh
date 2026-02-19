@@ -27,7 +27,7 @@ if [ ! -f "$KERNEL_IMAGE" ]; then
     exit 1
 fi
 
-if [ ! -f "horizos-rootfs.tar.gz" ]; then
+if [ ! -f "horiz-rootfs.tar.gz" ]; then
     echo "[エラー] rootfs.tar.gz が見つかりません。"
     exit 1
 fi
@@ -36,7 +36,7 @@ fi
 echo "[報告] ISO 用 initramfs を生成中..."
 INITRAMFS_DIR="${BUILD_DIR}/initramfs"
 mkdir -p "${INITRAMFS_DIR}"
-tar xzf horizos-rootfs.tar.gz -C "${INITRAMFS_DIR}"
+tar xzf horiz-rootfs.tar.gz -C "${INITRAMFS_DIR}"
 
 # initramfs を cpio 形式で固める
 (cd "${INITRAMFS_DIR}" && find . | cpio -H newc -o | gzip > "../initrd.img")
@@ -57,7 +57,7 @@ EOF
 
 # 4. ISO イメージの生成
 echo "[報告] xorriso を使用して ISO イメージを生成中..."
-OUTPUT_ISO="horizos-${ARCH}.iso"
+OUTPUT_ISO="horiz-${ARCH}.iso"
 
 # GitHub Actions 環境（Ubuntu）では grub-mkrescue を使用
 # 注意: grub-pc-bin, xorriso 等が必要

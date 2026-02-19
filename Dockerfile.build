@@ -23,7 +23,7 @@ RUN apt-get update && apt-get install -y \
 RUN rustup target add x86_64-unknown-linux-musl
 RUN rustup target add aarch64-unknown-linux-musl
 
-WORKDIR /horizos
+WORKDIR /horiz
 COPY . .
 
 # Environment for kernel build is also included

@@ -7,7 +7,7 @@ use std::process::Command;
 fn main() {
     let hostname = fs::read_to_string("/etc/hostname")
         .map(|s| s.trim().to_string())
-        .unwrap_or_else(|_| "horizos".to_string());
+        .unwrap_or_else(|_| "horiz".to_string());
 
     println!("--- Horiz-sh (Custom Enhanced) ---");
 

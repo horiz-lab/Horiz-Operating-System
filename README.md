@@ -38,7 +38,7 @@ x86_64 および aarch64 アーキテクチャをサポート。
 
 1. **Userland の構築**:
     `bash scripts/build_rootfs.sh`
-    Rust プロジェクトをビルドし、`rootfs/` スケルトンと統合された `horizos-rootfs.tar.gz` を生成。
+    Rust プロジェクトをビルドし、`rootfs/` スケルトンと統合された `horiz-rootfs.tar.gz` を生成。
 
 2. **カーネルの構築**:
     `bash scripts/build_kernel.sh`
@@ -46,12 +46,12 @@ x86_64 および aarch64 アーキテクチャをサポート。
 
 3. **ISO イメージの生成**:
     `bash scripts/build_iso.sh`
-    構築した rootfs とカーネルをパッケージングし、ブート可能な ISO イメージ (`horizos-{ARCH}.iso`) を作成。
+    構築した rootfs とカーネルをパッケージングし、ブート可能な ISO イメージ (`horiz-{ARCH}.iso`) を作成。
 
 ## [使用方法]
 
 1. **WSL2 / Docker**:
-    `horizos-rootfs.tar.gz` をインポートして使用。
+    `horiz-rootfs.tar.gz` をインポートして使用。
 
 2. **仮想マシン**:
-    `horizos-{ARCH}.iso` を使用して、QEMU 等の仮想マシンプラットフォームで起動。
+    `horiz-{ARCH}.iso` を使用して、QEMU 等の仮想マシンプラットフォームで起動。

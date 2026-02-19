@@ -64,8 +64,8 @@ chmod 644 "$ROOTFS_DIR/etc/horiz/pubkey"
 
 echo "[報告] Rootfs パッケージング中..."
 cd "$ROOTFS_DIR"
-tar czf ../../horizos-rootfs.tar.gz .
+tar czf ../../horiz-rootfs.tar.gz .
 
-echo "[報告] ビルド完了: horizos-rootfs.tar.gz"
+echo "[報告] ビルド完了: horiz-rootfs.tar.gz"
 
 
