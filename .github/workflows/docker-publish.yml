@@ -58,7 +58,12 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y musl-tools xorriso grub-common grub-pc-bin grub-efi-amd64-bin mtools msh cpio
+          sudo apt-get install -y musl-tools xorriso grub-common mtools cpio
+          if [ "${{ matrix.platform }}" = "linux/amd64" ]; then
+            sudo apt-get install -y grub-pc-bin grub-efi-amd64-bin
+          elif [ "${{ matrix.platform }}" = "linux/arm64" ]; then
+            sudo apt-get install -y grub-efi-arm64-bin
+          fi
 
       - name: Setup architecture names
         run: |
