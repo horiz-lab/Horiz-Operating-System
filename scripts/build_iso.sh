@@ -12,14 +12,14 @@ mkdir -p "${ISO_DIR}/boot/grub"
 
 # 1. 必要なバイナリの確認
 if [ "$ARCH" = "x86_64" ]; then
-    KERNEL_IMAGE="build/linux-6.19.2/arch/x86/boot/bzImage"
+    KERNEL_IMAGE="build/linux-6.19.3/arch/x86/boot/bzImage"
     GRUB_PLATFORM="i386-pc"
 elif [ "$ARCH" = "aarch64" ]; then
-    KERNEL_IMAGE="build/linux-6.19.2/arch/arm64/boot/Image"
+    KERNEL_IMAGE="build/linux-6.19.3/arch/arm64/boot/Image"
     GRUB_PLATFORM="arm64-efi"
 else
-    echo "[エラー] 未対応のアーキテクチャ: ${ARCH}"
-    exit 1
+    echo "[報告] ${ARCH} は ISO ビルド未対応のアーキテクチャです。ISOステップをスキップします。"
+    exit 0
 fi
 
 if [ ! -f "$KERNEL_IMAGE" ]; then

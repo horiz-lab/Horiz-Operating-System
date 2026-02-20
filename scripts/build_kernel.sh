@@ -1,9 +1,9 @@
 #!/bin/bash
-# build_kernel.sh - Compiles Linux Kernel 6.19.2 for WSL2
+# build_kernel.sh - Compiles Linux Kernel 6.19.2 for multiple architectures
 
 set -e
 
-KERNEL_VERSION="6.19.2"
+KERNEL_VERSION="6.19.3"
 KERNEL_URL="https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-${KERNEL_VERSION}.tar.xz"
 
 echo "[報告] Linux Kernel ${KERNEL_VERSION} ビルドプロセスを開始。"
@@ -20,32 +20,58 @@ if [ ! -d linux-${KERNEL_VERSION} ]; then
     tar xf linux.tar.xz
 fi
 
-# アーキテクチャ固有の設定
-ARCH="${ARCH:-x86_64}"
+# matrix.arch → Linux カーネル ARCH / CROSS_COMPILE マッピング
+INPUT_ARCH="${ARCH:-x86_64}"
 CROSS_COMPILE=""
 KCONFIG="defconfig"
 
-if [ "$ARCH" = "aarch64" ]; then
-    CROSS_COMPILE="aarch64-linux-gnu-"
-    # Linux カーネルビルドシステムでは arm64 を使用する
-    ARCH="arm64"
-    KCONFIG="defconfig"
-fi
+case "${INPUT_ARCH}" in
+    x86_64)
+        ARCH="x86_64"
+        CROSS_COMPILE=""
+        KERNEL_IMAGE="arch/x86/boot/bzImage"
+        ;;
+    aarch64)
+        ARCH="arm64"
+        CROSS_COMPILE="aarch64-linux-gnu-"
+        KERNEL_IMAGE="arch/arm64/boot/Image"
+        ;;
+    powerpc64le)
+        ARCH="powerpc"
+        CROSS_COMPILE="powerpc64le-linux-gnu-"
+        KERNEL_IMAGE="arch/powerpc/boot/zImage"
+        ;;
+    s390x)
+        ARCH="s390"
+        CROSS_COMPILE="s390x-linux-gnu-"
+        KERNEL_IMAGE="arch/s390/boot/bzImage"
+        ;;
+    mips64el)
+        ARCH="mips"
+        CROSS_COMPILE="mips64el-linux-gnuabi64-"
+        KERNEL_IMAGE="arch/mips/boot/vmlinux.bin"
+        ;;
+    riscv64)
+        ARCH="riscv"
+        CROSS_COMPILE="riscv64-linux-gnu-"
+        KERNEL_IMAGE="arch/riscv/boot/Image"
+        ;;
+    *)
+        echo "[警告] 未知のアーキテクチャ: ${INPUT_ARCH}。x86_64 にフォールバック。"
+        ARCH="x86_64"
+        CROSS_COMPILE=""
+        KERNEL_IMAGE="arch/x86/boot/bzImage"
+        ;;
+esac
 
 cd linux-${KERNEL_VERSION}
 
 # 設定の適用
-echo "[報告] カーネルを構成中 (ARCH: ${ARCH}, CONFIG: ${KCONFIG})..."
+echo "[報告] カーネルを構成中 (ARCH: ${ARCH}, CROSS_COMPILE: ${CROSS_COMPILE:-なし}, CONFIG: ${KCONFIG})..."
 make ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} ${KCONFIG}
 
 # ビルド
 echo "[報告] カーネルをコンパイル中..."
 make ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} -j$(nproc)
-
-if [ "$ARCH" = "x86_64" ]; then
-    KERNEL_IMAGE="arch/x86/boot/bzImage"
-else
-    KERNEL_IMAGE="arch/arm64/boot/Image"
-fi
 
 echo "[報告] ビルド完了: ${KERNEL_IMAGE}"

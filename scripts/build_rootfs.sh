@@ -31,7 +31,7 @@ case "$ARCH" in
         RUST_TARGET="s390x-unknown-linux-musl"
         ;;
     mips64el)
-        RUST_TARGET="mips64el-unknown-linux-musl"
+        RUST_TARGET="mips64el-unknown-linux-muslabi64"
         ;;
     *)
         echo "[警告] 未対応のアーキテクチャ: ${ARCH}"
@@ -81,13 +81,13 @@ fi
 
 # 権限設定の強化 (VULN-004 の解消)
 echo "[報告] ファイル権限を強化中..."
-chmod 600 "$ROOTFS_DIR/etc/shadow"
-chmod 644 "$ROOTFS_DIR/etc/passwd"
-chmod 700 "$ROOTFS_DIR/root"
-chmod 1777 "$ROOTFS_DIR/tmp"
+[ -f "$ROOTFS_DIR/etc/shadow" ] && chmod 600 "$ROOTFS_DIR/etc/shadow"
+[ -f "$ROOTFS_DIR/etc/passwd" ] && chmod 644 "$ROOTFS_DIR/etc/passwd"
+[ -d "$ROOTFS_DIR/root" ] && chmod 700 "$ROOTFS_DIR/root"
+[ -d "$ROOTFS_DIR/tmp" ] && chmod 1777 "$ROOTFS_DIR/tmp"
 chmod 755 "$ROOTFS_DIR/bin"/*
-chmod 755 "$ROOTFS_DIR/etc/horiz"
-chmod 644 "$ROOTFS_DIR/etc/horiz/pubkey"
+[ -d "$ROOTFS_DIR/etc/horiz" ] && chmod 755 "$ROOTFS_DIR/etc/horiz"
+[ -f "$ROOTFS_DIR/etc/horiz/pubkey" ] && chmod 644 "$ROOTFS_DIR/etc/horiz/pubkey"
 
 echo "[報告] Rootfs パッケージング中..."
 cd "$ROOTFS_DIR"
