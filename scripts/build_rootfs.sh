@@ -28,10 +28,10 @@ case "$ARCH" in
         RUST_TARGET="powerpc64le-unknown-linux-musl"
         ;;
     s390x)
-        RUST_TARGET="s390x-unknown-linux-musl"
+        RUST_TARGET="s390x-unknown-linux-gnu"
         ;;
     mips64el)
-        RUST_TARGET="mips64el-unknown-linux-muslabi64"
+        RUST_TARGET="mips64el-unknown-linux-gnuabi64"
         ;;
     *)
         echo "[警告] 未対応のアーキテクチャ: ${ARCH}"

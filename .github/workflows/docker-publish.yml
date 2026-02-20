@@ -108,14 +108,12 @@ jobs:
           if [ "$ARCH" = "powerpc64le" ]; then rustup target add powerpc64le-unknown-linux-musl; fi
           if [ "$ARCH" = "riscv64" ]; then rustup target add riscv64gc-unknown-linux-musl; fi
           # Tier 3 ターゲット: nightly + build-std が必要
-          if [ "$ARCH" = "s390x" ] || [ "$ARCH" = "mips64el" ]; then
-            rustup toolchain install nightly
-            rustup component add rust-src --toolchain nightly
-          fi
+          if [ "$ARCH" = "s390x" ]; then rustup target add s390x-unknown-linux-gnu; fi
+          if [ "$ARCH" = "mips64el" ]; then rustup target add mips64el-unknown-linux-gnuabi64; fi
 
       - name: Build HorizOS Rootfs
         run: |
-          if [ "$ARCH" = "mips64el" ] || [ "$ARCH" = "s390x" ]; then
+          if [ "$ARCH" = "none_placeholder" ]; then
             USE_NIGHTLY=1 bash scripts/build_rootfs.sh
           else
             bash scripts/build_rootfs.sh
