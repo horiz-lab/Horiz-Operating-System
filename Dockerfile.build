@@ -14,6 +14,10 @@ RUN apt-get update && apt-get install -y \
     bc \
     git \
     gcc-aarch64-linux-gnu \
+    gcc-riscv64-linux-gnu \
+    gcc-powerpc64le-linux-gnu \
+    gcc-s390x-linux-gnu \
+    gcc-mips64el-linux-gnu \
     xorriso \
     grub-pc-bin \
     grub-common \
@@ -22,6 +26,10 @@ RUN apt-get update && apt-get install -y \
 # Add musl targets for static linking
 RUN rustup target add x86_64-unknown-linux-musl
 RUN rustup target add aarch64-unknown-linux-musl
+RUN rustup target add riscv64gc-unknown-linux-musl
+RUN rustup target add powerpc64le-unknown-linux-musl
+RUN rustup target add s390x-unknown-linux-musl
+RUN rustup target add mips64el-unknown-linux-musl
 
 WORKDIR /horiz
 COPY . .

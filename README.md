@@ -34,7 +34,7 @@ x86_64, aarch64, riscv64, powerpc64le, s390x, mips64el の主要 6 種類のア�
 
 ## ビルド手順
 
-環境変数 `ARCH` (x86_64, aarch64) でターゲットを指定可能（デフォルトは x86_64）。
+環境変数 `ARCH` でターゲットを指定可能（デフォルトは x86_64）。対応値: `x86_64`, `aarch64`, `riscv64`, `powerpc64le`, `s390x`, `mips64el`。
 
 1. **Userland の構築**:
     `bash scripts/build_rootfs.sh`

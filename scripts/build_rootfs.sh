@@ -14,10 +14,31 @@ mkdir -p "$ROOTFS_DIR"
 mkdir -p "$ROOTFS_DIR"/{bin,dev,etc,proc,sys,tmp,var,root,home/horiz}
 
 # Rustバイナリのビルド (musl ターゲットでスタティックリンク)
-RUST_TARGET="x86_64-unknown-linux-musl"
-if [ "$ARCH" = "aarch64" ]; then
-    RUST_TARGET="aarch64-unknown-linux-musl"
-fi
+case "$ARCH" in
+    x86_64)
+        RUST_TARGET="x86_64-unknown-linux-musl"
+        ;;
+    aarch64)
+        RUST_TARGET="aarch64-unknown-linux-musl"
+        ;;
+    riscv64)
+        RUST_TARGET="riscv64gc-unknown-linux-musl"
+        ;;
+    powerpc64le)
+        RUST_TARGET="powerpc64le-unknown-linux-musl"
+        ;;
+    s390x)
+        RUST_TARGET="s390x-unknown-linux-musl"
+        ;;
+    mips64el)
+        RUST_TARGET="mips64el-unknown-linux-musl"
+        ;;
+    *)
+        echo "[警告] 未対応のアーキテクチャ: ${ARCH}"
+        echo "[報告] 対応アーキテクチャ: x86_64, aarch64, riscv64, powerpc64le, s390x, mips64el"
+        exit 1
+        ;;
+esac
 
 echo "[報告] ターゲット ${RUST_TARGET} でビルドを実行。"
 cd horiz-core
@@ -68,5 +89,3 @@ cd "$ROOTFS_DIR"
 tar czf ../../horiz-rootfs.tar.gz .
 
 echo "[報告] ビルド完了: horiz-rootfs.tar.gz"
-
-
