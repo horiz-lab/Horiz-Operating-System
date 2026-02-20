@@ -36,10 +36,12 @@ jobs:
             platform: linux/s390x
             arch: s390x
             asset_suffix: s390x
+            use_nightly: true
           - os: ubuntu-latest
             platform: linux/mips64le
             arch: mips64el
             asset_suffix: mips64el
+            use_nightly: true
           - os: ubuntu-latest
             platform: linux/riscv64
             arch: riscv64
@@ -101,19 +103,17 @@ jobs:
         run: echo "ARCH=${{ matrix.arch }}" >> $GITHUB_ENV
 
       - name: Add Rust target
+        if: matrix.use_nightly != true
         run: |
           # Tier 1/2 ターゲット: stable で事前ビルド済みstdが利用可能
           if [ "$ARCH" = "x86_64" ]; then rustup target add x86_64-unknown-linux-musl; fi
           if [ "$ARCH" = "aarch64" ]; then rustup target add aarch64-unknown-linux-musl; fi
           if [ "$ARCH" = "powerpc64le" ]; then rustup target add powerpc64le-unknown-linux-musl; fi
           if [ "$ARCH" = "riscv64" ]; then rustup target add riscv64gc-unknown-linux-musl; fi
-          # Tier 3 ターゲット: nightly + build-std が必要
-          if [ "$ARCH" = "s390x" ]; then rustup target add s390x-unknown-linux-gnu; fi
-          if [ "$ARCH" = "mips64el" ]; then rustup target add mips64el-unknown-linux-gnuabi64; fi
 
       - name: Build HorizOS Rootfs
         run: |
-          if [ "$ARCH" = "none_placeholder" ]; then
+          if [ "${{ matrix.use_nightly }}" = "true" ]; then
             USE_NIGHTLY=1 bash scripts/build_rootfs.sh
           else
             bash scripts/build_rootfs.sh
