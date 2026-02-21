@@ -13,8 +13,3 @@ lto = true       # Link Time Optimization
 codegen-units = 1
 panic = "abort"  # Reduce binary size
 strip = true     # Strip symbols
-
-[package]
-name = "horiz-core"
-version = "1.3.0"
-edition = "2024"
