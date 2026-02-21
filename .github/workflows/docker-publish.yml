@@ -96,7 +96,7 @@ jobs:
           elif [ "${{ matrix.arch }}" = "mips64el" ]; then
             sudo apt-get install -y gcc-mips64el-linux-gnuabi64
           elif [ "${{ matrix.arch }}" = "riscv64" ]; then
-            sudo apt-get install -y gcc-riscv64-linux-gnu
+            sudo apt-get install -y gcc-riscv64-linux-gnu grub-efi-riscv64-bin
           fi
 
       - name: Setup architecture names
@@ -166,9 +166,26 @@ jobs:
 
       - name: Rename Assets
         run: |
+          # Rootfs
           mv horiz-rootfs.tar.gz horiz-rootfs-${{ matrix.asset_suffix }}.tar.gz
+          
+          # ISO (if exists)
           if [ -f "horiz-${{ env.ARCH }}.iso" ]; then
             mv horiz-${{ env.ARCH }}.iso horiz-${{ matrix.asset_suffix }}.iso
+          fi
+
+          # Kernel Image
+          # x86_64: bzImage, arm64/riscv64: Image, s390: bzImage, mips: vmlinux.bin, powerpc: zImage
+          KERNEL_PATH=""
+          if [ "${{ matrix.arch }}" = "x86_64" ]; then KERNEL_PATH="build/linux-6.19.3/arch/x86/boot/bzImage"; fi
+          if [ "${{ matrix.arch }}" = "aarch64" ]; then KERNEL_PATH="build/linux-6.19.3/arch/arm64/boot/Image"; fi
+          if [ "${{ matrix.arch }}" = "riscv64" ]; then KERNEL_PATH="build/linux-6.19.3/arch/riscv/boot/Image"; fi
+          if [ "${{ matrix.arch }}" = "s390x" ]; then KERNEL_PATH="build/linux-6.19.3/arch/s390/boot/bzImage"; fi
+          if [ "${{ matrix.arch }}" = "mips64el" ]; then KERNEL_PATH="build/linux-6.19.3/arch/mips/boot/vmlinux.bin"; fi
+          if [ "${{ matrix.arch }}" = "powerpc64le" ]; then KERNEL_PATH="build/linux-6.19.3/arch/powerpc/boot/zImage"; fi
+          
+          if [ -f "$KERNEL_PATH" ]; then
+            cp "$KERNEL_PATH" "horiz-kernel-${{ matrix.asset_suffix }}"
           fi
 
       - name: Upload Build Artifacts
@@ -178,6 +195,7 @@ jobs:
           path: |
             horiz-rootfs-*.tar.gz
             horiz-*.iso
+            horiz-kernel-*
           retention-days: 1
 
   merge:
