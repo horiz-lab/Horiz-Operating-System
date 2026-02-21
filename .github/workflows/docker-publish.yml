@@ -84,7 +84,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y musl-tools xorriso grub-common mtools cpio build-essential bison flex libssl-dev libelf-dev bc
+          sudo apt-get install -y musl-tools xorriso grub-common mtools cpio build-essential bison flex libssl-dev libelf-dev bc u-boot-tools
           if [ "${{ matrix.arch }}" = "x86_64" ]; then
             sudo apt-get install -y grub-pc-bin grub-efi-amd64-bin
           elif [ "${{ matrix.arch }}" = "aarch64" ]; then
