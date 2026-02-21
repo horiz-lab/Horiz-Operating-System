@@ -4,8 +4,13 @@ use std::io::{self, Read, Write};
 use std::net::TcpStream;
 use std::path::Path;
 
+mod sha256;
 mod sha512;
 mod ed25519;
+mod x25519;
+mod chacha20poly1305;
+mod hkdf;
+mod tls;
 
 // --- Custom Argument Parser ---
 struct Args {
@@ -56,7 +61,11 @@ fn parse_args() -> Result<Args, String> {
 const MAX_RESPONSE_SIZE: usize = 100 * 1024 * 1024; // 100MB limit
 
 fn http_get(url: &str) -> io::Result<Vec<u8>> {
-    let stripped = url.strip_prefix("http://").ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "Only http:// is supported in zero-dep mode"))?;
+    // https:// は TLS 1.3 独自実装にルーティング
+    if url.starts_with("https://") {
+        return tls::https_get(url);
+    }
+    let stripped = url.strip_prefix("http://").ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "Only http:// and https:// are supported"))?;
     let (host_port, path) = match stripped.find('/') {
         Some(i) => (&stripped[..i], &stripped[i..]),
         None => (stripped, "/"),
