@@ -2,7 +2,7 @@
 
 基礎から設計された、WSL2およびDocker向けの純粋なUNIX系OS。
 x86_64, aarch64, riscv64, powerpc64le, s390x, mips64el の主要 6 種類のアーキテクチャをサポート。
-外部依存を一切排除した「Zero-Dependency」設計により、完全な所有権と透明性を実現。
+外部依存を一切排除した「Zero-Dependency」設計により、完全な透明性を実現。
 
 ## 主要なセキュリティ機能
 
