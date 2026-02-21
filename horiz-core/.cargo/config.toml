@@ -15,7 +15,7 @@ linker = "rust-lld"
 rustflags = ["-C", "target-feature=+crt-static", "-C", "link-self-contained=yes"]
 
 [target.s390x-unknown-linux-musl]
-rustflags = ["-C", "target-feature=+crt-static"]
+rustflags = ["-C", "target-feature=+crt-static", "-C", "link-self-contained=no"]
 
 [target.mips64el-unknown-linux-muslabi64]
-rustflags = ["-C", "target-feature=+crt-static"]
+rustflags = ["-C", "target-feature=+crt-static", "-C", "link-self-contained=no"]
