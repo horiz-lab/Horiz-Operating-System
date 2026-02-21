@@ -96,7 +96,7 @@ jobs:
           elif [ "${{ matrix.arch }}" = "mips64el" ]; then
             sudo apt-get install -y gcc-mips64el-linux-gnuabi64
           elif [ "${{ matrix.arch }}" = "riscv64" ]; then
-            sudo apt-get install -y gcc-riscv64-linux-gnu grub-efi-riscv64
+            sudo apt-get install -y gcc-riscv64-linux-gnu
           fi
 
       - name: Setup architecture names

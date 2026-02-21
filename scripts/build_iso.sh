@@ -18,8 +18,8 @@ elif [ "$ARCH" = "aarch64" ]; then
     KERNEL_IMAGE="build/linux-6.19.3/arch/arm64/boot/Image"
     GRUB_PLATFORM="arm64-efi"
 elif [ "$ARCH" = "riscv64" ]; then
-    KERNEL_IMAGE="build/linux-6.19.3/arch/riscv/boot/Image"
-    GRUB_PLATFORM="riscv64-efi"
+    echo "[報告] riscv64 は x86_64 ランナー環境での grub-efi モジュール制約により ISO ビルドをスキップします。"
+    exit 0
 else
     echo "[報告] ${ARCH} は ISO ビルド未対応のアーキテクチャです。ISOステップをスキップします。"
     exit 0
