@@ -11,19 +11,24 @@ mod x25519;
 mod chacha20poly1305;
 mod hkdf;
 mod tls;
+mod base64;
+mod pem;
+mod x509;
 
 // --- Custom Argument Parser ---
 struct Args {
     url: String,
     name: String,
     pubkey: String,
+    trust_store: Vec<String>,
 }
 
 fn parse_args() -> Result<Args, String> {
     let env_args: Vec<String> = env::args().collect();
     let mut url = String::new();
     let mut name = String::new();
-    let mut pubkey = "/etc/horiz/pubkey".to_string();
+    let mut pubkey = "/bin/pkg.pub".to_string();
+    let mut trust_store = Vec::new();
 
     let mut i = 1;
     while i < env_args.len() {
@@ -46,24 +51,37 @@ fn parse_args() -> Result<Args, String> {
                     i += 2;
                 } else { return Err("Missing value for --pubkey".into()); }
             }
+            "--trust" => {
+                if i + 1 < env_args.len() {
+                    trust_store.push(env_args[i + 1].clone());
+                    i += 2;
+                } else { return Err("Missing value for --trust".into()); }
+            }
             _ => { return Err(format!("Unknown argument: {}", env_args[i])); }
         }
     }
 
     if url.is_empty() || name.is_empty() {
-        return Err("Usage: horiz-pkg --url <URL> --name <NAME> [--pubkey <PATH>]".into());
+        return Err("Usage: horiz-pkg --url <URL> --name <NAME> [--pubkey <PATH>] [--trust <CA_PEM_PATH>]".into());
     }
 
-    Ok(Args { url, name, pubkey })
+    // Default trust store if none provided
+    if trust_store.is_empty() {
+        if Path::new("/etc/horiz/certs.pem").exists() {
+            trust_store.push("/etc/horiz/certs.pem".to_string());
+        }
+    }
+
+    Ok(Args { url, name, pubkey, trust_store })
 }
 
 // --- Minimal Custom HTTP/1.1 Client (Zero-Dependency) ---
 const MAX_RESPONSE_SIZE: usize = 100 * 1024 * 1024; // 100MB limit
 
-fn http_get(url: &str) -> io::Result<Vec<u8>> {
+fn http_get(url: &str, trust_store_keys: &[[u8; 32]]) -> io::Result<Vec<u8>> {
     // https:// は TLS 1.3 独自実装にルーティング
     if url.starts_with("https://") {
-        return tls::https_get(url);
+        return tls::https_get(url, trust_store_keys);
     }
     let stripped = url.strip_prefix("http://").ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "Only http:// and https:// are supported"))?;
     let (host_port, path) = match stripped.find('/') {
@@ -114,14 +132,28 @@ fn main() -> io::Result<()> {
     }
 
     let target_path = format!("/bin/{}", args.name);
-    let tmp_path = format!("/bin/{}.tmp", args.name);
+    let tmp_path = format!("/tmp/{}.tmp", args.name);
     let sig_url = format!("{}.sig", args.url);
 
+    // Load Trust Store
+    let mut trust_store_keys = Vec::new();
+    for path in &args.trust_store {
+        let content = fs::read_to_string(path)?;
+        let pems = pem::parse(&content);
+        for p in pems {
+            if p.label == "CERTIFICATE" {
+                if let Some(cert) = x509::parse_cert(&p.contents) {
+                    trust_store_keys.push(cert.public_key);
+                }
+            }
+        }
+    }
+
     println!("[報告] パッケージ本体をロード中: {}", args.url);
-    let data = http_get(&args.url)?;
+    let data = http_get(&args.url, &trust_store_keys)?;
 
     println!("[報告] 署名をロード中: {}", sig_url);
-    let sig_data = http_get(&sig_url)?;
+    let sig_data = http_get(&sig_url, &trust_store_keys)?;
     if sig_data.len() != 64 {
         return Err(io::Error::new(io::ErrorKind::InvalidData, "[エラー] 署名形式が不正です（64バイトである必要があります）。"));
     }

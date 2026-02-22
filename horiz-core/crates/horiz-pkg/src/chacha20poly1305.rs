@@ -103,43 +103,34 @@ fn poly1305_mac(key: &[u8; 32], msg: &[u8]) -> [u8; 16] {
 
         // 128x128 multiply: acc_lo * r_lo
         let (p0, p1) = mul_u128_to_256(acc_lo, r_lo);
-        // acc_hi * r_lo  (64x128 → 192)
+        // acc_hi * r_lo  (2x128 → 130)
         let ah_rlo_lo = (acc_hi as u128).wrapping_mul(r_lo);
         // cross terms are zero because r_hi=0
 
         // Combine
-        let (s0, c1) = p0.overflowing_add(0u128);
-        let s1 = p1.wrapping_add(ah_rlo_lo).wrapping_add(c1 as u128);
+        let (s0, c1) = p0.overflowing_add(0u128); // just s0 = p0, c1 = 0
+        let s0 = p0;
+        let s1 = p1.wrapping_add(ah_rlo_lo); // p1 + ah_rlo_lo (can't overflow since ah <= 3, r <= 2^124, so ah*r < 2^126)
 
-        // s0 is bits 0..127, s1 is bits 128..255 (+ overflow)
         // Reduce mod 2^130-5:
-        // acc = (s0 & mask130) + (s >> 130) * 5
-        let lo_bits  = s0 & ((1u128 << 127) - 1); // bits 0..126
-        let bit127   = (s0 >> 127) as u64;
-        let bits_128_129 = (s1 & 3) as u64;
-        let high_130 = (s1 >> 2).wrapping_add((s1 >> 2) / 2 * 0); // s1>>2 is the part >= 2^130
+        // Value is s1 * 2^128 + s0
+        // s1 * 2^128 = (s1 >> 2) * 2^130 + (s1 & 3) * 2^128
+        // ≡ (s1 >> 2) * 5 + (s1 & 3) * 2^128
+        let mut c0 = s0;
+        let mut c1 = (s1 & 3) as u64;
+        let (v, carry) = c0.overflowing_add((s1 >> 2) * 5);
+        c0 = v;
+        c1 += carry as u64;
 
-        // Properly: the 130-bit result is s0[127:0] | s1[1:0] shifted by 128
-        // The overflow (bits ≥ 2^130) = (bit127 | bits_128_129>>1) ... this is getting complex.
-        // Use a simpler approach: treat as (hi_word << 128 | lo_word), reduce mod 2^130-5
-        let overflow_bits = s1; // bits [128+...]
-        let acc130_lo = s0.wrapping_add((overflow_bits >> 2).wrapping_mul(5));
-        let acc130_hi = ((overflow_bits & 3) as u64).wrapping_add(bit127);
-
-        acc_lo = acc130_lo;
-        acc_hi = acc130_hi;
-
-        // Final reduction if acc_hi >= 4 (i.e., value >= 2^130)
-        if acc_hi >= 4 {
-            let extra = ((acc_hi >> 2) * 5) as u128;
-            acc_hi &= 3;
-            let (nl, c) = acc_lo.overflowing_add(extra);
-            acc_lo = nl;
-            acc_hi = acc_hi.wrapping_add(c as u64);
+        if c1 >= 4 {
+            c1 -= 4;
+            let (v, carry) = c0.overflowing_add(5);
+            c0 = v;
+            c1 += carry as u64;
         }
-        let _ = p;
-        let _ = r_hi;
-        let _ = p1;
+
+        acc_lo = c0;
+        acc_hi = c1;
     }
 
     // Final: acc += s mod 2^128

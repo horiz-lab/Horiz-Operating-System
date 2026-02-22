@@ -29,14 +29,17 @@ x86_64, aarch64, riscv64, powerpc64le, s390x, mips64el の主要 6 種類のア�
 - **TLS 証明書チェーン検証**: Ed25519 サーバー証明書の署名検証に対応し、中間者攻撃 (MITM) を防止。
 - **トラストストア設定**: デフォルトで `/etc/horiz/certs.pem` を信頼済みルート証明書として読み込む。`--trust <CA_PEM_PATH>` オプションでカスタマイズ可能。
 
+> [!TIP]
+> `horiz-pkg` のより詳細なコマンドラインオプション、およびカスタムトラストストアを用いたセキュアなダウンロード方法については [horiz-pkg コマンド リファレンス](docs/commands/horiz-pkg.md) を参照してください。
+
 ## ディレクトリ構造
 
 - **horiz-core/**: Userland ロジック。システム本体の機能を実装するコア・コンポーネント。
-  - **crates/horiz-init**: システム初期化・特権管理・死活監視・構造化ロギング。
-  - **crates/horiz-pkg**: **原子的なパッケージ配置**と署名検証を備えた管理システム。
-  - **crates/horiz-sh**: インタラクティブ・シェル。
-  - **crates/horiz-utils**: 基本的なコマンド群（ls, cat, echo, パス正規化等）。
-  - **crates/horiz-auth**: 定数時間比較と CSPRNG を備えた認証ライブラリ。
+  - **crates/horiz-init**: システム初期化・特権管理・死活監視・構造化ロギング。 ([詳細リファレンス](docs/commands/horiz-init.md))
+  - **crates/horiz-pkg**: 原子的なパッケージ配置と署名検証を備えた管理システム。 ([詳細リファレンス](docs/commands/horiz-pkg.md))
+  - **crates/horiz-sh**: インタラクティブ・シェル。 ([詳細リファレンス](docs/commands/horiz-sh.md))
+  - **crates/horiz-utils**: 基本的なコマンド群（ls, cat, echo, パス正規化等）。 ([詳細リファレンス](docs/commands/horiz-utils.md))
+  - **crates/horiz-auth**: 定数時間比較と CSPRNG を備えた認証ライブラリ。 ([詳細リファレンス](docs/commands/horiz-auth.md))
 - **scripts/**: 各種ビルド・自動化スクリプト。
 - **build.sh**: スクラッチビルドによる迅速な rootfs 構築・統合スクリプト。
 
