@@ -420,7 +420,6 @@ pub fn https_get(url: &str, trust_store: &[[u8; 32]]) -> io::Result<Vec<u8>> {
     let mut server_finished_data: Option<Vec<u8>> = None;
     let mut leaf_pubkey: Option<[u8; 32]> = None;
     let mut th_before_server_finished = [0u8; 32];
-    let mut th_cert = [0u8; 32];
 
     let mut hs_buffer = Vec::new();
 
@@ -484,7 +483,7 @@ pub fn https_get(url: &str, trust_store: &[[u8; 32]]) -> io::Result<Vec<u8>> {
                     transcript.push(msg_full);
                 }
                 HT_CERT_VERIFY => {
-                    th_cert = transcript.hash();
+                    let th_cert = transcript.hash();
                     if let Some(pk) = leaf_pubkey {
                         if msg_body.len() >= 4 {
                             let alg = u16::from_be_bytes([msg_body[0], msg_body[1]]);

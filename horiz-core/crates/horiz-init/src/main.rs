@@ -5,7 +5,7 @@ use std::ffi::CString;
 use std::env;
 use std::fs::{self, OpenOptions};
 use std::io::{self, Write};
-use libc::{mount, MS_NOSUID, MS_NODEV, MS_NOEXEC, waitpid, WNOHANG, SIGCHLD, signal, SIG_DFL, SIG_IGN};
+use libc::{mount, MS_NOSUID, MS_NODEV, MS_NOEXEC, waitpid, WNOHANG, SIGCHLD, signal, SIG_DFL};
 
 use horiz_auth;
 
@@ -34,12 +34,6 @@ fn get_timestamp() -> u64 {
         .duration_since(UNIX_EPOCH)
         .map(|d| d.as_secs())
         .unwrap_or(0)
-}
-
-/// セキュアな乱数を取得 (CSPRNG - Zero-Dependency)
-fn get_random_bytes(buf: &mut [u8]) -> io::Result<()> {
-    let mut f = fs::File::open("/dev/urandom")?;
-    io::Read::read_exact(&mut f, buf)
 }
 
 /// 構造化ログを出力
