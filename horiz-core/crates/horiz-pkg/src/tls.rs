@@ -420,7 +420,7 @@ pub fn https_get(url: &str, trust_store: &[[u8; 32]]) -> io::Result<Vec<u8>> {
     let mut server_finished_data: Option<Vec<u8>> = None;
     let mut leaf_pubkey: Option<[u8; 32]> = None;
     let mut th_before_server_finished = [0u8; 32];
-    let mut _th_cert = [0u8; 32];
+    let mut th_cert = [0u8; 32];
 
     let mut hs_buffer = Vec::new();
 
