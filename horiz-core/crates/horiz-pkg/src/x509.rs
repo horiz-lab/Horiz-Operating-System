@@ -85,7 +85,7 @@ pub fn parse_cert(der: &[u8]) -> Option<X509Cert> {
     if bstr_len != 33 || der[pos] != 0 { return None; } // 0 unused bits + 32 bytes key
     let mut public_key = [0u8; 32];
     public_key.copy_from_slice(&der[pos+1..pos+33]);
-    pos = spki_end;
+    let _ = spki_end;
 
     // Skip to signatureValue in Certificate
     pos = tbs_end;

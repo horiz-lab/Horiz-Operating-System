@@ -7,6 +7,7 @@
 
 use std::io::{self, Read, Write};
 use std::net::TcpStream;
+use std::path::Path;
 
 use crate::chacha20poly1305::{chacha20poly1305_encrypt, chacha20poly1305_decrypt};
 use crate::hkdf::{hkdf_extract, hkdf_expand_label, derive_secret};
@@ -28,6 +29,7 @@ const HT_CERT_VERIFY:        u8 = 15;
 const HT_FINISHED:           u8 = 20;
 
 // ── Extension types ───────────────────────────────────────────────────────────
+#[allow(dead_code)]
 const EXT_SERVER_NAME:       u16 = 0;
 const EXT_SUPPORTED_VERSIONS:u16 = 43;
 const EXT_KEY_SHARE:         u16 = 51;
@@ -52,6 +54,7 @@ impl Transcript {
     fn new() -> Self { Transcript { data: Vec::new() } }
     fn push(&mut self, hs_msg: &[u8]) { self.data.extend_from_slice(hs_msg); }
     fn hash(&self) -> [u8; 32] { sha256(&self.data) }
+    #[allow(dead_code)]
     fn empty_hash() -> [u8; 32] { sha256(&[]) }
 }
 
@@ -417,7 +420,7 @@ pub fn https_get(url: &str, trust_store: &[[u8; 32]]) -> io::Result<Vec<u8>> {
     let mut server_finished_data: Option<Vec<u8>> = None;
     let mut leaf_pubkey: Option<[u8; 32]> = None;
     let mut th_before_server_finished = [0u8; 32];
-    let mut th_cert = [0u8; 32];
+    let mut _th_cert = [0u8; 32];
 
     let mut hs_buffer = Vec::new();
 

@@ -77,7 +77,7 @@ fn poly1305_mac(key: &[u8; 32], msg: &[u8]) -> [u8; 16] {
     // P = 2^130 - 5
     // We use 130-bit arithmetic via two u128 (lo + hi)
     // Accumulate using simple per-block arithmetic
-    let p: u128 = (1u128 << 127) - 1; // approximate; real poly1305 needs 130-bit
+    let _p: u128 = (1u128 << 127) - 1; // approximate; real poly1305 needs 130-bit
     // Use 130-bit via (hi: u64, lo: u128) approach
     let mut acc_lo: u128 = 0;
     let mut acc_hi: u64  = 0;
@@ -99,7 +99,7 @@ fn poly1305_mac(key: &[u8; 32], msg: &[u8]) -> [u8; 16] {
         // acc = acc * r  (130 × 128 → 258 bit, reduce mod 2^130-5)
         // Use u128 multiplication with manual carry
         let r_lo = r0;
-        let r_hi = 0u64;
+        let _r_hi = 0u64;
 
         // 128x128 multiply: acc_lo * r_lo
         let (p0, p1) = mul_u128_to_256(acc_lo, r_lo);
@@ -108,7 +108,7 @@ fn poly1305_mac(key: &[u8; 32], msg: &[u8]) -> [u8; 16] {
         // cross terms are zero because r_hi=0
 
         // Combine
-        let (s0, c1) = p0.overflowing_add(0u128); // just s0 = p0, c1 = 0
+        let (_s0, _c1) = p0.overflowing_add(0u128); // just s0 = p0, c1 = 0
         let s0 = p0;
         let s1 = p1.wrapping_add(ah_rlo_lo); // p1 + ah_rlo_lo (can't overflow since ah <= 3, r <= 2^124, so ah*r < 2^126)
 

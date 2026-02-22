@@ -220,6 +220,7 @@ mod tests {
 
 // 簡易的なhexエンコード (テスト用)
 mod hex {
+    #[allow(dead_code)]
     pub fn encode(data: [u8; 32]) -> String {
         data.iter().map(|b| format!("{:02x}", b)).collect()
     }

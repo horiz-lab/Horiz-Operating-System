@@ -168,7 +168,7 @@ pub fn x25519(scalar: &[u8; 32], point: &[u8; 32]) -> [u8; 32] {
     s[31] &= 127;
     s[31] |= 64;
 
-    let mut x1 = fe_frombytes(point);
+    let x1 = fe_frombytes(point);
     let mut x2 = fe_one();
     let mut z2 = fe_zero();
     let mut x3 = x1;
@@ -208,9 +208,9 @@ pub fn x25519(scalar: &[u8; 32], point: &[u8; 32]) -> [u8; 32] {
     cswap(swap, &mut z2, &mut z3);
 
     // Fermat inversion of z2
-    let mut z2_11 = fe_sq(&z2); // 2
+    let z2_11 = fe_sq(&z2); // 2
     let mut t0 = fe_sq(&z2_11); // 4
-    let mut t1 = fe_sq(&t0); // 8
+    let t1 = fe_sq(&t0); // 8
     let z9 = fe_mul_u128(&t1, &z2);
     let z11 = fe_mul_u128(&z9, &z2_11);
     t0 = fe_sq(&z11);

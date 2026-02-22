@@ -2,7 +2,7 @@
 //
 // Used for TLS 1.3 key schedule.
 
-use crate::sha256::{sha256, hmac_sha256};
+use crate::sha256::hmac_sha256;
 
 /// HKDF-Extract: PRK = HMAC-Hash(salt, IKM)
 pub fn hkdf_extract(salt: &[u8], ikm: &[u8]) -> [u8; 32] {

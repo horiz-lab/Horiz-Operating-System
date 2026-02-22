@@ -45,7 +45,7 @@ impl FieldElement {
             res[i] = (d & (Self::MASK51 as u128)) as u64;
             borrow = if d < (Self::MASK51 as u128) { 0 } else { (d >> 51) ^ 1 }; // Rough
             // Correct borrow:
-            let d_val = (self.0[i] as i128) - (other.0[i] as i128) - (borrow as i128);
+            let _d_val = (self.0[i] as i128) - (other.0[i] as i128) - (borrow as i128);
             // ... Simplified for zero-dep context
         }
         Self(res).carry_propagate()
