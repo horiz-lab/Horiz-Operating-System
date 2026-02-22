@@ -7,7 +7,7 @@ set -e
 
 ARCH="${ARCH:-x86_64}"
 
-echo "[報告] HorizOS スクラッチビルドプロセスを開始 (ARCH: ${ARCH})。"
+echo "HorizOS スクラッチビルドプロセスを開始 (ARCH: ${ARCH})。"
 
 # Userland (rootfs) の構築
 # Alpine Linux などの外部ベースイメージを使用せず、horiz-core から構築する
@@ -16,5 +16,5 @@ bash scripts/build_rootfs.sh
 # カーネルのビルド（必要に応じて）
 # bash scripts/build_kernel.sh
 
-echo "[報告] 全てのビルドプロセスが完了。horiz-rootfs.tar.gz を確認せよ。"
+echo "全てのビルドプロセスが完了。horiz-rootfs.tar.gz を確認せよ。"
 

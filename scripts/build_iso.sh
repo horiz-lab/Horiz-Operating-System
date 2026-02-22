@@ -4,7 +4,7 @@
 set -e
 
 ARCH="${ARCH:-x86_64}"
-echo "[報告] HorizOS ISO ビルドプロセスを開始 (ARCH: ${ARCH})。"
+echo "HorizOS ISO ビルドプロセスを開始 (ARCH: ${ARCH})。"
 
 BUILD_DIR="build/iso"
 ISO_DIR="${BUILD_DIR}/root"
@@ -18,10 +18,10 @@ elif [ "$ARCH" = "aarch64" ]; then
     KERNEL_IMAGE="build/linux-6.19.3/arch/arm64/boot/Image"
     GRUB_PLATFORM="arm64-efi"
 elif [ "$ARCH" = "riscv64" ]; then
-    echo "[報告] riscv64 は x86_64 ランナー環境での grub-efi モジュール制約により ISO ビルドをスキップします。"
+    echo "riscv64 は x86_64 ランナー環境での grub-efi モジュール制約により ISO ビルドをスキップします。"
     exit 0
 else
-    echo "[報告] ${ARCH} は ISO ビルド未対応のアーキテクチャです。ISOステップをスキップします。"
+    echo "${ARCH} は ISO ビルド未対応のアーキテクチャです。ISOステップをスキップします。"
     exit 0
 fi
 
@@ -36,7 +36,7 @@ if [ ! -f "horiz-rootfs.tar.gz" ]; then
 fi
 
 # 2. ISO 用 initramfs の作成
-echo "[報告] ISO 用 initramfs を生成中..."
+echo "ISO 用 initramfs を生成中..."
 INITRAMFS_DIR="${BUILD_DIR}/initramfs"
 mkdir -p "${INITRAMFS_DIR}"
 tar xzf horiz-rootfs.tar.gz -C "${INITRAMFS_DIR}"
@@ -47,7 +47,7 @@ cp "${BUILD_DIR}/initrd.img" "${ISO_DIR}/boot/initrd.img"
 cp "$KERNEL_IMAGE" "${ISO_DIR}/boot/vmlinuz"
 
 # 3. GRUB 設定の作成
-echo "[報告] GRUB 設定ファイルを生成中..."
+echo "GRUB 設定ファイルを生成中..."
 cat <<EOF > "${ISO_DIR}/boot/grub/grub.cfg"
 set default=0
 set timeout=5
@@ -59,7 +59,7 @@ menuentry "HorizOS (${ARCH})" {
 EOF
 
 # 4. ISO イメージの生成
-echo "[報告] xorriso を使用して ISO イメージを生成中..."
+echo "xorriso を使用して ISO イメージを生成中..."
 OUTPUT_ISO="horiz-${ARCH}.iso"
 
 # GitHub Actions 環境（Ubuntu）では grub-mkrescue を使用
@@ -72,4 +72,4 @@ elif [ "$ARCH" = "aarch64" ]; then
     grub-mkrescue -d /usr/lib/grub/arm64-efi -o "${OUTPUT_ISO}" "${ISO_DIR}"
 fi
 
-echo "[報告] ISO ビルド完了: ${OUTPUT_ISO}"
+echo "ISO ビルド完了: ${OUTPUT_ISO}"

@@ -6,13 +6,13 @@ set -e
 KERNEL_VERSION="6.19.3"
 KERNEL_URL="https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-${KERNEL_VERSION}.tar.xz"
 
-echo "[報告] Linux Kernel ${KERNEL_VERSION} ビルドプロセスを開始。"
+echo "Linux Kernel ${KERNEL_VERSION} ビルドプロセスを開始。"
 
 mkdir -p build
 cd build
 
 if [ ! -f linux.tar.xz ]; then
-    echo "[報告] カーネルソースをダウンロード中..."
+    echo "カーネルソースをダウンロード中..."
     curl -L -o linux.tar.xz ${KERNEL_URL}
 fi
 
@@ -57,7 +57,7 @@ case "${INPUT_ARCH}" in
         KERNEL_IMAGE="arch/riscv/boot/Image"
         ;;
     *)
-        echo "[警告] 未知のアーキテクチャ: ${INPUT_ARCH}。x86_64 にフォールバック。"
+        echo "未知のアーキテクチャ: ${INPUT_ARCH}。x86_64 にフォールバック。"
         ARCH="x86_64"
         CROSS_COMPILE=""
         KERNEL_IMAGE="arch/x86/boot/bzImage"
@@ -67,11 +67,11 @@ esac
 cd linux-${KERNEL_VERSION}
 
 # 設定の適用
-echo "[報告] カーネルを構成中 (ARCH: ${ARCH}, CROSS_COMPILE: ${CROSS_COMPILE:-なし}, CONFIG: ${KCONFIG})..."
+echo "カーネルを構成中 (ARCH: ${ARCH}, CROSS_COMPILE: ${CROSS_COMPILE:-なし}, CONFIG: ${KCONFIG})..."
 make ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} ${KCONFIG}
 
 # ビルド
-echo "[報告] カーネルをコンパイル中..."
+echo "カーネルをコンパイル中..."
 make ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} -j$(nproc)
 
-echo "[報告] ビルド完了: ${KERNEL_IMAGE}"
+echo "ビルド完了: ${KERNEL_IMAGE}"

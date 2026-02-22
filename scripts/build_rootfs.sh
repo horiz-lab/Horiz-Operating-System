@@ -3,7 +3,7 @@
 set -e
 
 ARCH="${ARCH:-x86_64}"
-echo "[報告] Userland (Horiz Core) スクラッチビルドを開始。"
+echo "Userland (Horiz Core) スクラッチビルドを開始。"
 
 # ワークディレクトリの準備
 ROOTFS_DIR="build/rootfs"
@@ -34,16 +34,16 @@ case "$ARCH" in
         RUST_TARGET="mips64el-unknown-linux-muslabi64"
         ;;
     *)
-        echo "[警告] 未対応のアーキテクチャ: ${ARCH}"
-        echo "[報告] 対応アーキテクチャ: x86_64, aarch64, riscv64, powerpc64le, s390x, mips64el"
+        echo "未対応のアーキテクチャ: ${ARCH}"
+        echo "対応アーキテクチャ: x86_64, aarch64, riscv64, powerpc64le, s390x, mips64el"
         exit 1
         ;;
 esac
 
-echo "[報告] ターゲット ${RUST_TARGET} でビルドを実行。"
+echo "ターゲット ${RUST_TARGET} でビルドを実行。"
 cd horiz-core
 if [ "${USE_NIGHTLY:-0}" = "1" ]; then
-    echo "[報告] Tier 3 ターゲット検出: nightly + cargo-zigbuild + build-std を使用。"
+    echo "Tier 3 ターゲット検出: nightly + cargo-zigbuild + build-std を使用。"
     cargo +nightly zigbuild --release --target ${RUST_TARGET} -Z build-std=std,panic_abort
 else
     cargo build --release --target ${RUST_TARGET}
@@ -67,12 +67,12 @@ ln -sf horiz-utils "$BIN_DIR/echo"
 
 # rootfs スケルトン (設定ファイル等) の適用
 if [ -d "rootfs" ]; then
-    echo "[報告] rootfs テンプレートを適用中..."
+    echo "rootfs テンプレートを適用中..."
     cp -r rootfs/* "$ROOTFS_DIR/"
 fi
 
 # HTTPS 通信のための CA 証明書の配置
-echo "[報告] CA 証明書を配置中..."
+echo "CA 証明書を配置中..."
 mkdir -p "$ROOTFS_DIR/etc/ssl/certs"
 # ビルド環境が Debian/Ubuntu の場合、システムからコピーする。
 if [ -f /etc/ssl/certs/ca-certificates.crt ]; then
@@ -80,7 +80,7 @@ if [ -f /etc/ssl/certs/ca-certificates.crt ]; then
 fi
 
 # 権限設定の強化 (VULN-004 の解消)
-echo "[報告] ファイル権限を強化中..."
+echo "ファイル権限を強化中..."
 [ -f "$ROOTFS_DIR/etc/shadow" ] && chmod 600 "$ROOTFS_DIR/etc/shadow"
 [ -f "$ROOTFS_DIR/etc/passwd" ] && chmod 644 "$ROOTFS_DIR/etc/passwd"
 [ -d "$ROOTFS_DIR/root" ] && chmod 700 "$ROOTFS_DIR/root"
@@ -89,8 +89,8 @@ chmod 755 "$ROOTFS_DIR/bin"/*
 [ -d "$ROOTFS_DIR/etc/horiz" ] && chmod 755 "$ROOTFS_DIR/etc/horiz"
 [ -f "$ROOTFS_DIR/etc/horiz/pubkey" ] && chmod 644 "$ROOTFS_DIR/etc/horiz/pubkey"
 
-echo "[報告] Rootfs パッケージング中..."
+echo "Rootfs パッケージング中..."
 cd "$ROOTFS_DIR"
 tar czf ../../horiz-rootfs.tar.gz .
 
-echo "[報告] ビルド完了: horiz-rootfs.tar.gz"
+echo "ビルド完了: horiz-rootfs.tar.gz"
