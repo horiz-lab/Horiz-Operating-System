@@ -1,5 +1,5 @@
-// --- X25519 Key Exchange (Zero-Dependency) ---
-// Radix-51 5-limb u64 implementation
+// --- X25519 鍵交換 (依存関係なし) ---
+// 基数 51 の 5リム u64 実装
 
 type Fe = [u64; 5];
 
@@ -21,7 +21,7 @@ fn fe_frombytes(s: &[u8; 32]) -> Fe {
     buf.copy_from_slice(&s[19..27]);
     h[3] = (u64::from_le_bytes(buf) >> 1) & 0x7FFFFFFFFFFFF;
     
-    // The last 8 bytes
+    // 最後の 8 バイト
     let mut last = [0u8; 8];
     last[0..7].copy_from_slice(&s[25..32]);
     h[4] = (u64::from_le_bytes(last) >> 4) & 0x7FFFFFFFFFFFF;
@@ -43,7 +43,7 @@ fn fe_tobytes(f: &Fe) -> [u8; 32] {
     carry = h[2] >> 51; h[2] &= 0x7FFFFFFFFFFFF; h[3] += carry;
     carry = h[3] >> 51; h[3] &= 0x7FFFFFFFFFFFF; h[4] += carry;
 
-    // Add 19 to test if it's >= p
+    // >= p かどうかをテストするために 19 を追加
     let dummy_c0 = h[0] + 19;
     let c0 = dummy_c0 >> 51;
     let dummy_c1 = h[1] + c0;
@@ -132,7 +132,7 @@ fn fe_mul_u128(f: &Fe, g: &Fe) -> [u64; 5] {
     
     let dt = out[0] as u128 + carry * 19;
     carry = dt >> 51; out[0] = (dt & mask) as u64;
-    out[1] = (out[1] as u128 + carry) as u64; // Final carry propagation
+    out[1] = (out[1] as u128 + carry) as u64; // 最終的なキャリー（桁上がり）の伝播
     out
 }
 
@@ -207,7 +207,7 @@ pub fn x25519(scalar: &[u8; 32], point: &[u8; 32]) -> [u8; 32] {
     cswap(swap, &mut x2, &mut x3);
     cswap(swap, &mut z2, &mut z3);
 
-    // Fermat inversion of z2
+    // z2 のフェルマー逆数
     let z2_11 = fe_sq(&z2); // 2
     let mut t0 = fe_sq(&z2_11); // 4
     let t1 = fe_sq(&t0); // 8

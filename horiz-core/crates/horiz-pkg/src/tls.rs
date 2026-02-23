@@ -1,9 +1,9 @@
-// --- TLS 1.3 Client (Zero-Dependency, RFC 8446) ---
+// --- TLS 1.3 クライアント (依存関係なし, RFC 8446) ---
 //
-// Cipher suite: TLS_CHACHA20_POLY1305_SHA256 (0x1303)
-// Key exchange: X25519
-// Certificate verification: skipped (no trust store in zero-dep mode)
-//   → provides encryption against passive eavesdroppers but NOT against MITM.
+// 暗号スイート: TLS_CHACHA20_POLY1305_SHA256 (0x1303)
+// 鍵交換: X25519
+// 証明書の検証: スキップ (依存関係なしモードではトラストストアなし)
+//   → 受動的盗聴に対しての暗号化は提供するが、中間者攻撃(MITM)に対しては提供しない。
 
 use std::io::{self, Read, Write};
 use std::net::TcpStream;
@@ -14,13 +14,13 @@ use crate::hkdf::{hkdf_extract, hkdf_expand_label, derive_secret};
 use crate::sha256::sha256;
 use crate::x25519::{x25519, x25519_public_key};
 
-// ── TLS record types ──────────────────────────────────────────────────────────
+// ── TLS レコードタイプ ──────────────────────────────────────────────────────────
 const RT_CHANGE_CIPHER_SPEC: u8 = 20;
 const RT_ALERT:              u8 = 21;
 const RT_HANDSHAKE:          u8 = 22;
 const RT_APPLICATION_DATA:   u8 = 23;
 
-// ── Handshake message types ───────────────────────────────────────────────────
+// ── ハンドシェイクメッセージタイプ ───────────────────────────────────────────────────
 const HT_CLIENT_HELLO:       u8 = 1;
 const HT_SERVER_HELLO:       u8 = 2;
 const HT_ENCRYPTED_EXTS:     u8 = 8;
@@ -28,7 +28,7 @@ const HT_CERTIFICATE:        u8 = 11;
 const HT_CERT_VERIFY:        u8 = 15;
 const HT_FINISHED:           u8 = 20;
 
-// ── Extension types ───────────────────────────────────────────────────────────
+// ── 拡張タイプ ───────────────────────────────────────────────────────────
 #[allow(dead_code)]
 const EXT_SERVER_NAME:       u16 = 0;
 const EXT_SUPPORTED_VERSIONS:u16 = 43;
@@ -37,7 +37,7 @@ const EXT_KEY_SHARE:         u16 = 51;
 const TLS13: u16 = 0x0304;
 const LEGACY_VERSION: u16 = 0x0303;
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── ヘルパー ───────────────────────────────────────────────────────────────────
 
 fn u16_be(v: u16) -> [u8; 2] { v.to_be_bytes() }
 fn u24_be(v: u32) -> [u8; 3] { [(v>>16)as u8,(v>>8)as u8,v as u8] }
@@ -48,7 +48,7 @@ fn read_exact_vec(stream: &mut TcpStream, n: usize) -> io::Result<Vec<u8>> {
     Ok(buf)
 }
 
-// ── Transcript hash ───────────────────────────────────────────────────────────
+// ── トランスクリプトハッシュ ───────────────────────────────────────────────────────────
 struct Transcript { data: Vec<u8> }
 impl Transcript {
     fn new() -> Self { Transcript { data: Vec::new() } }
@@ -58,7 +58,7 @@ impl Transcript {
     fn empty_hash() -> [u8; 32] { sha256(&[]) }
 }
 
-// ── Key material ──────────────────────────────────────────────────────────────
+// ── 鍵マテリアル ──────────────────────────────────────────────────────────────
 struct TrafficKeys {
     key:   [u8; 32],
     iv:    [u8; 12],
@@ -96,7 +96,7 @@ impl TrafficKeys {
     }
 }
 
-// ── TLS record layer ──────────────────────────────────────────────────────────
+// ── TLS レコード層 ──────────────────────────────────────────────────────────
 
 fn send_record(stream: &mut TcpStream, record_type: u8, data: &[u8]) -> io::Result<()> {
     let mut rec = Vec::with_capacity(5 + data.len());
@@ -121,11 +121,11 @@ fn send_encrypted_record(
     plaintext: &[u8],
     keys: &mut TrafficKeys,
 ) -> io::Result<()> {
-    // Inner plaintext: content || content_type
+    // 内部平文: content || content_type
     let mut inner = plaintext.to_vec();
     inner.push(content_type);
 
-    // AAD: opaque_type=23, legacy_version, length (of ciphertext+tag)
+    // AAD: opaque_type=23, legacy_version, 長さ (暗号文+タグ)
     let ct_len = inner.len() + 16; // +16 for Poly1305 tag
     let mut aad = vec![RT_APPLICATION_DATA];
     aad.extend_from_slice(&u16_be(LEGACY_VERSION));
@@ -141,7 +141,7 @@ fn recv_encrypted_record(
 ) -> io::Result<(u8, Vec<u8>)> {
     loop {
         let (rtype, data) = recv_record(stream)?;
-        if rtype == RT_CHANGE_CIPHER_SPEC { continue; } // ignore CCS
+        if rtype == RT_CHANGE_CIPHER_SPEC { continue; } // CCS を無視
 
         if rtype == RT_ALERT {
             return Err(io::Error::new(io::ErrorKind::ConnectionAborted, "TLS alert received"));
@@ -158,7 +158,7 @@ fn recv_encrypted_record(
         let inner = keys.decrypt(&data, &aad)
             .map_err(|_| io::Error::new(io::ErrorKind::InvalidData, "AEAD decryption failed"))?;
 
-        // Strip trailing zeros then content type byte
+        // 末尾のゼロを削除し、次にコンテンツタイプバイトを削除
         let inner = inner;
         let ct_byte_pos = inner.iter().rposition(|&b| b != 0)
             .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "Empty TLS inner plaintext"))?;
@@ -168,10 +168,10 @@ fn recv_encrypted_record(
     }
 }
 
-// ── Build ClientHello ─────────────────────────────────────────────────────────
+// ── ClientHello の構築 ─────────────────────────────────────────────────────────
 
 fn build_client_hello(hostname: &str, client_random: &[u8; 32], pub_key: &[u8; 32]) -> Vec<u8> {
-    // Extension: server_name
+    // 拡張: server_name
     let sni = {
         let name = hostname.as_bytes();
         let mut e = Vec::new();
@@ -186,7 +186,7 @@ fn build_client_hello(hostname: &str, client_random: &[u8; 32], pub_key: &[u8; 3
         e
     };
 
-    // Extension: supported_versions = TLS 1.3 only
+    // 拡張: supported_versions = TLS 1.3 のみ
     let sup_ver = {
         let mut e = Vec::new();
         e.extend_from_slice(&u16_be(EXT_SUPPORTED_VERSIONS));
@@ -196,7 +196,7 @@ fn build_client_hello(hostname: &str, client_random: &[u8; 32], pub_key: &[u8; 3
         e
     };
 
-    // Extension: key_share = X25519
+    // 拡張: key_share = X25519
     let key_share = {
         let entry_len: u16 = 2 + 2 + 32; // group + key_exchange_len + key
         let mut e = Vec::new();
@@ -209,7 +209,7 @@ fn build_client_hello(hostname: &str, client_random: &[u8; 32], pub_key: &[u8; 3
         e
     };
 
-    // Extension: signature_algorithms = Ed25519 (0x0807)
+    // 拡張: signature_algorithms = Ed25519 (0x0807)
     let sig_algs = {
         let mut e = Vec::new();
         e.extend_from_slice(&u16_be(13)); // EXT_SIGNATURE_ALGORITHMS
@@ -219,7 +219,7 @@ fn build_client_hello(hostname: &str, client_random: &[u8; 32], pub_key: &[u8; 3
         e
     };
 
-    // Extension: supported_groups = X25519 (0x001d)
+    // 拡張: supported_groups = X25519 (0x001d)
     let sup_groups = {
         let mut e = Vec::new();
         e.extend_from_slice(&u16_be(10)); // EXT_SUPPORTED_GROUPS
@@ -236,7 +236,7 @@ fn build_client_hello(hostname: &str, client_random: &[u8; 32], pub_key: &[u8; 3
     extensions.extend_from_slice(&sig_algs);
     extensions.extend_from_slice(&sup_groups);
 
-    // ClientHello body
+    // ClientHello 本体
     let mut body = Vec::new();
     body.extend_from_slice(&u16_be(LEGACY_VERSION));        // legacy_version
     body.extend_from_slice(client_random);                   // random
@@ -247,19 +247,19 @@ fn build_client_hello(hostname: &str, client_random: &[u8; 32], pub_key: &[u8; 3
     body.extend_from_slice(&u16_be(extensions.len() as u16));
     body.extend_from_slice(&extensions);
 
-    // Handshake header: type(1) + length(3)
+    // ハンドシェイクヘッダー: type(1) + length(3)
     let mut hs = vec![HT_CLIENT_HELLO];
     hs.extend_from_slice(&u24_be(body.len() as u32));
     hs.extend_from_slice(&body);
     hs
 }
 
-// ── Parse ServerHello ─────────────────────────────────────────────────────────
+// ── ServerHello の解析 ─────────────────────────────────────────────────────────
 
 fn parse_server_hello(data: &[u8]) -> io::Result<[u8; 32]> {
-    // Minimal parse: find key_share extension with x25519 (0x001d)
+    // 最小限の解析: x25519 (0x001d) を持つ key_share 拡張を見つける
     if data.len() < 6 { return Err(io::Error::new(io::ErrorKind::InvalidData, "ServerHello too short")); }
-    // skip: legacy_version(2) + random(32) + session_id_len(1) + session_id + cipher(2) + comp(1)
+    // スキップ: legacy_version(2) + random(32) + session_id_len(1) + session_id + cipher(2) + comp(1)
     let mut pos = 2 + 32;
     if pos >= data.len() { return Err(io::Error::new(io::ErrorKind::InvalidData, "SH short at session_id")); }
     let sid_len = data[pos] as usize; pos += 1 + sid_len;
@@ -274,7 +274,7 @@ fn parse_server_hello(data: &[u8]) -> io::Result<[u8; 32]> {
         let ext_type = u16::from_be_bytes([data[pos], data[pos+1]]); pos += 2;
         let ext_len  = u16::from_be_bytes([data[pos], data[pos+1]]) as usize; pos += 2;
         if ext_type == EXT_KEY_SHARE {
-            // server KeyShareEntry: group(2) + key_exchange_len(2) + key
+            // サーバー KeyShareEntry: group(2) + key_exchange_len(2) + key
             if ext_len < 36 { return Err(io::Error::new(io::ErrorKind::InvalidData, "key_share ext too short")); }
             let group = u16::from_be_bytes([data[pos], data[pos+1]]);
             if group != 0x001d { return Err(io::Error::new(io::ErrorKind::InvalidData, "Expected x25519 key share")); }
@@ -289,7 +289,7 @@ fn parse_server_hello(data: &[u8]) -> io::Result<[u8; 32]> {
     Err(io::Error::new(io::ErrorKind::InvalidData, "No key_share in ServerHello"))
 }
 
-// ── TLS 1.3 Key Schedule (RFC 8446 §7.1) ─────────────────────────────────────
+// ── TLS 1.3 キースケジュール (RFC 8446 §7.1) ─────────────────────────────────────
 
 fn zeros32() -> [u8; 32] { [0u8; 32] }
 
@@ -305,7 +305,7 @@ fn tls13_key_schedule(shared_secret: &[u8; 32], transcript_hash: &[u8; 32])
     // Handshake Secret
     let hs_secret = hkdf_extract(&derived, shared_secret);
 
-    // Client/Server handshake traffic secrets
+    // クライアント/サーバーハンドシェイクトラフィックシークレット
     let c_hs = derive_secret(&hs_secret, b"c hs traffic", transcript_hash);
     let s_hs = derive_secret(&hs_secret, b"s hs traffic", transcript_hash);
 
@@ -322,11 +322,11 @@ fn tls13_app_keys(hs_secret: &[u8; 32], transcript_hash: &[u8; 32])
     (c_ap, s_ap)
 }
 
-// ── Verify Finished (constant-time) ──────────────────────────────────────────
+// ── Finished の検証 (定数時間) ──────────────────────────────────────────
 
 fn verify_finished(finished_key: &[u8; 32], transcript_hash: &[u8; 32], verify_data: &[u8]) -> bool {
     // finished_key = HKDF-Expand-Label(base_key, "finished", "", 32)
-    // verify_data  = HMAC-SHA-256(finished_key, transcript_hash)
+    // verify_data = HMAC-SHA-256(finished_key, transcript_hash)
     use crate::sha256::hmac_sha256;
     let expected = hmac_sha256(finished_key, transcript_hash);
     if verify_data.len() != 32 { return false; }
@@ -340,12 +340,12 @@ fn finished_verify_data(finished_key: &[u8; 32], transcript_hash: &[u8; 32]) -> 
     hmac_sha256(finished_key, transcript_hash)
 }
 
-// ── Main HTTPS GET ─────────────────────────────────────────────────────────────
+// ── メイン HTTPS GET ─────────────────────────────────────────────────────────────
 
-/// HTTPS GET using TLS 1.3 (ChaCha20-Poly1305 + X25519).
-/// Performs full certificate chain verification using the provided trust store.
+/// TLS 1.3 (ChaCha20-Poly1305 + X25519) を使用した HTTPS GET。
+/// 提供されたトラストストアを使用して完全な証明書チェーンの検証を実行。
 pub fn https_get(url: &str, trust_store: &[[u8; 32]]) -> io::Result<Vec<u8>> {
-    // Parse URL: https://host[:port]/path
+    // URLの解析: https://host[:port]/path
     let stripped = url.strip_prefix("https://")
         .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "https_get: URL must start with https://"))?;
     let (host_port, path) = match stripped.find('/') {
@@ -360,37 +360,37 @@ pub fn https_get(url: &str, trust_store: &[[u8; 32]]) -> io::Result<Vec<u8>> {
 
     let mut stream = TcpStream::connect(format!("{}:{}", host, port))?;
 
-    // ── Generate ephemeral X25519 key pair ────────────────────────────────────
+    // ── 一時的な X25519 キーペアの生成 ────────────────────────────────────
     let mut private_key = [0u8; 32];
     if Path::new("/dev/urandom").exists() {
         std::fs::File::open("/dev/urandom")
             .and_then(|mut f| f.read_exact(&mut private_key))
             .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /dev/urandom: {}", e)))?;
     } else {
-        // Fallback for non-Linux tests
+        // 非Linuxテスト用のフォールバック
         private_key = [1u8; 32];
     }
     let public_key = x25519_public_key(&private_key);
 
-    // ── Client random ─────────────────────────────────────────────────────────
+    // ── クライアントのランダム値 ─────────────────────────────────────────────────────────
     let mut client_random = [0u8; 32];
     if Path::new("/dev/urandom").exists() {
         std::fs::File::open("/dev/urandom")
             .and_then(|mut f| f.read_exact(&mut client_random))
             .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Failed to read /dev/urandom: {}", e)))?;
     } else {
-        // Fallback for non-Linux tests
+        // 非Linuxテスト用のフォールバック
         client_random = [2u8; 32];
     }
 
-    // ── Build & send ClientHello ──────────────────────────────────────────────
+    // ── ClientHello の構築と送信 ──────────────────────────────────────────────
     let client_hello_hs = build_client_hello(host, &client_random, &public_key);
     send_record(&mut stream, RT_HANDSHAKE, &client_hello_hs)?;
 
     let mut transcript = Transcript::new();
     transcript.push(&client_hello_hs);
 
-    // ── Receive ServerHello ───────────────────────────────────────────────────
+    // ── ServerHello の受信 ───────────────────────────────────────────────────
     let (rtype, sh_record) = recv_record(&mut stream)?;
     if rtype != RT_HANDSHAKE {
         return Err(io::Error::new(io::ErrorKind::InvalidData, format!("Expected Handshake record, got {}", rtype)));
@@ -404,19 +404,19 @@ pub fn https_get(url: &str, trust_store: &[[u8; 32]]) -> io::Result<Vec<u8>> {
 
     let server_pub = parse_server_hello(sh_body)?;
 
-    // ── ECDH shared secret ────────────────────────────────────────────────────
+    // ── ECDH 共有シークレット ────────────────────────────────────────────────────
     let shared_secret = x25519(&private_key, &server_pub);
 
-    // ── Derive handshake keys ─────────────────────────────────────────────────
-    let th_sh = transcript.hash(); // transcript hash after ServerHello
+    // ── ハンドシェイクキーの導出 ─────────────────────────────────────────────────
+    let th_sh = transcript.hash(); // ServerHello 後のトランスクリプトハッシュ
     let (c_hs_secret, s_hs_secret, hs_secret) = tls13_key_schedule(&shared_secret, &th_sh);
 
     let mut server_hs_keys = TrafficKeys::from_secret(&s_hs_secret);
     let mut client_hs_keys = TrafficKeys::from_secret(&c_hs_secret);
 
-    // ── Receive encrypted handshake messages ──────────────────────────────────
-    // Possibly a ChangeCipherSpec (ignore), then EncryptedExtensions, Certificate,
-    // CertificateVerify, Finished.
+    // ── 暗号化されたハンドシェイクメッセージの受信 ──────────────────────────────────
+    // おそらく ChangeCipherSpec (無視)、次に EncryptedExtensions、Certificate、
+    // CertificateVerify、Finished。
     let mut server_finished_data: Option<Vec<u8>> = None;
     let mut leaf_pubkey: Option<[u8; 32]> = None;
     let mut th_before_server_finished = [0u8; 32];
@@ -443,7 +443,7 @@ pub fn https_get(url: &str, trust_store: &[[u8; 32]]) -> io::Result<Vec<u8>> {
             let msg_len = u32::from_be_bytes([0, hs_buffer[pos+1], hs_buffer[pos+2], hs_buffer[pos+3]]) as usize;
             
             if pos + 4 + msg_len > hs_buffer.len() {
-                break; // Need more data for this handshake message
+                break; // このハンドシェイクメッセージにはさらにデータが必要
             }
             
             let msg_end = pos + 4 + msg_len;
@@ -455,7 +455,7 @@ pub fn https_get(url: &str, trust_store: &[[u8; 32]]) -> io::Result<Vec<u8>> {
                     transcript.push(msg_full);
                 }
                 HT_CERTIFICATE => {
-                    // Extract certificates from msg_body
+                    // msg_body から証明書を抽出
                     let mut cpos = 0;
                     if cpos < msg_body.len() {
                         let context_len = msg_body[cpos] as usize;
@@ -504,7 +504,7 @@ pub fn https_get(url: &str, trust_store: &[[u8; 32]]) -> io::Result<Vec<u8>> {
                     transcript.push(msg_full);
                 }
                 HT_FINISHED => {
-                    // Hash BEFORE pushing Finished!
+                    // Finished をプッシュする前のハッシュ！
                     th_before_server_finished = transcript.hash();
                     server_finished_data = Some(msg_body.to_vec());
                     transcript.push(msg_full);
@@ -522,32 +522,32 @@ pub fn https_get(url: &str, trust_store: &[[u8; 32]]) -> io::Result<Vec<u8>> {
             break;
         }
     }
-    // ── Verify server Finished ────────────────────────────────────────────────
+    // ── サーバー Finished の検証 ────────────────────────────────────────────────
     let s_finished_key_v = hkdf_expand_label(&s_hs_secret, b"finished", &[], 32);
     let mut s_finished_key = [0u8; 32];
     s_finished_key.copy_from_slice(&s_finished_key_v);
 
     if let Some(vd) = server_finished_data {
         if !verify_finished(&s_finished_key, &th_before_server_finished, &vd) {
-            // Non-fatal in this minimal implementation — log and continue
-            // (In production this MUST be fatal)
+            // この最小実装では致命的ではない — ログに記録して続行
+            // (本番環境ではこれは致命的でなければならない)
             eprintln!("[警告] TLS: Server Finished 検証失敗 (証明書なし検証モード)");
         }
     }
 
-    // ── Derive application traffic keys ───────────────────────────────────────
+    // ── アプリケーショントラフィックキーの導出 ───────────────────────────────────────
     let th_server_finished = transcript.hash();
     let (c_ap_secret, s_ap_secret) = tls13_app_keys(&hs_secret, &th_server_finished);
     let mut server_app_keys = TrafficKeys::from_secret(&s_ap_secret);
     let mut client_app_keys = TrafficKeys::from_secret(&c_ap_secret);
 
-    // ── Send client Finished ──────────────────────────────────────────────────
+    // ── クライアント Finished の送信 ──────────────────────────────────────────────────
     let c_finished_key_v = hkdf_expand_label(&c_hs_secret, b"finished", &[], 32);
     let mut c_finished_key = [0u8; 32];
     c_finished_key.copy_from_slice(&c_finished_key_v);
     let c_verify_data = finished_verify_data(&c_finished_key, &th_server_finished);
 
-    // Handshake message: type(1) + len(3) + verify_data(32)
+    // ハンドシェイクメッセージ: type(1) + len(3) + verify_data(32)
     let mut finished_msg = vec![HT_FINISHED];
     finished_msg.extend_from_slice(&u24_be(32));
     finished_msg.extend_from_slice(&c_verify_data);
@@ -555,14 +555,14 @@ pub fn https_get(url: &str, trust_store: &[[u8; 32]]) -> io::Result<Vec<u8>> {
 
     send_encrypted_record(&mut stream, RT_HANDSHAKE, &finished_msg, &mut client_hs_keys)?;
 
-    // ── Send HTTP GET request ─────────────────────────────────────────────────
+    // ── HTTP GET リクエストの送信 ─────────────────────────────────────────────────
     let http_req = format!(
         "GET {} HTTP/1.1\r\nHost: {}\r\nConnection: close\r\n\r\n",
         path, host
     );
     send_encrypted_record(&mut stream, RT_APPLICATION_DATA, http_req.as_bytes(), &mut client_app_keys)?;
 
-    // ── Receive HTTP response ─────────────────────────────────────────────────
+    // ── HTTP レスポンスの受信 ─────────────────────────────────────────────────
     const MAX_RESPONSE_SIZE: usize = 100 * 1024 * 1024;
     let mut response_body = Vec::new();
 
@@ -575,7 +575,7 @@ pub fn https_get(url: &str, trust_store: &[[u8; 32]]) -> io::Result<Vec<u8>> {
                 response_body.extend_from_slice(&data);
             }
             Ok((RT_HANDSHAKE, _)) => {
-                // Ignore TLS 1.3 Post-Handshake messages (e.g. NewSessionTicket)
+                // TLS 1.3 のハンドシェイク後のメッセージ (NewSessionTicket など) を無視
                 continue;
             }
             Ok((RT_ALERT, _)) | Err(_) => break,
@@ -583,7 +583,7 @@ pub fn https_get(url: &str, trust_store: &[[u8; 32]]) -> io::Result<Vec<u8>> {
         }
     }
 
-    // ── Strip HTTP headers ────────────────────────────────────────────────────
+    // ── HTTP ヘッダーを削除 ────────────────────────────────────────────────────
     if let Some(pos) = response_body.windows(4).position(|w| w == b"\r\n\r\n") {
         let header = String::from_utf8_lossy(&response_body[..pos]);
         if !header.contains("200 OK") {

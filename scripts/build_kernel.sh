@@ -1,5 +1,5 @@
 #!/bin/bash
-# build_kernel.sh - Compiles Linux Kernel 6.19.2 for multiple architectures
+# build_kernel.sh - 複数のアーキテクチャ用に Linux カーネル 6.19.2 をコンパイル
 
 set -e
 

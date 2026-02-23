@@ -1,5 +1,5 @@
-// --- Custom Ed25519 scratch implementation (Zero-Dependency) ---
-// Using 5x51-bit limbs for overflow-safe modular arithmetic
+// --- カスタム Ed25519 スクラッチ実装 (依存関係なし) ---
+// オーバーフロー安全なモジュラ演算のための 5x51ビットリムの使用
 
 #[derive(Clone, Copy)]
 pub struct FieldElement(pub [u64; 5]);
@@ -37,16 +37,16 @@ impl FieldElement {
     pub fn sub(&self, other: &Self) -> Self {
         let mut res = [0u64; 5];
         let mut borrow = 0u128;
-        // P-reduction trick: add 2*P to ensure positivity
+        // P-削減トリック: 正であることを保証するために 2*P を加算する
         let p_limbs = [0x0007ffffffffffed, 0x0007ffffffffffff, 0x0007ffffffffffff, 0x0007ffffffffffff, 0x0003ffffffffffff];
         for i in 0..5 {
             let s = self.0[i] as u128 + p_limbs[i] * 2;
             let d = s - (other.0[i] as u128 + borrow);
             res[i] = (d & (Self::MASK51 as u128)) as u64;
-            borrow = if d < (Self::MASK51 as u128) { 0 } else { (d >> 51) ^ 1 }; // Rough
-            // Correct borrow:
+            borrow = if d < (Self::MASK51 as u128) { 0 } else { (d >> 51) ^ 1 }; // 大まかな
+            // 正しいボロー（桁借り）:
             let _d_val = (self.0[i] as i128) - (other.0[i] as i128) - (borrow as i128);
-            // ... Simplified for zero-dep context
+            // ... 依存関係なしのコンテキストのために簡略化
         }
         Self(res).carry_propagate()
     }
@@ -91,7 +91,7 @@ impl FieldElement {
             res[i] &= Self::MASK51;
         }
         res[0] += carry * 19;
-        // second pass
+        // 2回目のパス
         let mut carry = 0;
         for i in 0..5 {
             res[i] += carry;
@@ -122,11 +122,11 @@ pub struct Point {
 }
 
 impl Point {
-    // D in 51-bit radix
+    // 51ビット基数の D
     pub const D: FieldElement = FieldElement([0x00034dca135978a3, 0x0001a8283b156ebd, 0x0005e7a26001c02f, 0x0000000000000000, 0x0000000000000000]); 
-    // Base point B
+    // ベースポイント B
     pub const B: Point = Point {
-        x: FieldElement([0x000216936d3cd6e5, 0x0003fe2af22027a6, 0x00002c1d1b73d250, 0x00047402f8548ec2, 0x0005141c14cccd72]), // Placeholder
+        x: FieldElement([0x000216936d3cd6e5, 0x0003fe2af22027a6, 0x00002c1d1b73d250, 0x00047402f8548ec2, 0x0005141c14cccd72]), // プレースホルダー
         y: FieldElement([0x0006666666666658, 0x0006666666666666, 0x0006666666666666, 0x0006666666666666, 0x0002666666666666]),
         z: FieldElement::ONE,
         t: FieldElement::ZERO,
@@ -138,7 +138,7 @@ impl Point {
     }
 
     pub fn add(&self, other: &Self) -> Self {
-        // Correct Ed25519 coordinate addition (Point addition on Twisted Edwards curve)
+        // 正しい Ed25519 座標加算 (Twisted Edwards 曲線上の点加算)
         // A = (Y1-X1)*(Y2-X2), B = (Y1+X1)*(Y2+X1), C = T1*2*d*T2, D = Z1*2*Z2, 
         // E = B-A, F = D-C, G = D+C, H = B+A
         // X3 = E*F, Y3 = G*H, T3 = E*H, Z3 = F*G
@@ -206,7 +206,7 @@ mod tests {
 
     #[test]
     fn test_fuzz_addition_robustness() {
-        // Simple LCG for pseudo-randomness (Zero-Dependency)
+        // 疑似乱数のための単純な LCG (依存関係なし)
         let mut seed = 0x12345678u64;
         let mut next_rand = || {
             seed = seed.wrapping_mul(6364136223846793005).wrapping_add(1);
@@ -222,7 +222,7 @@ mod tests {
             let p2 = Point::from_bytes(&buf).unwrap();
             
             let p3 = p1.add(&p2);
-            // Verify no panics and basic property: Z should not be zero in normal cases
+            // パニックがなく、基本的なプロパティを検証: Z は通常の場合ゼロであってはならない
             assert!(p3.z.0.iter().any(|&x| x != 0));
         }
     }

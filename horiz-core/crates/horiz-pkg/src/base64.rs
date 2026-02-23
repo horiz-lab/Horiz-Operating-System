@@ -12,9 +12,9 @@ pub fn decode(input: &str) -> Option<Vec<u8>> {
             b'0'..=b'9' => b - b'0' + 52,
             b'+' => 62,
             b'/' => 63,
-            b'=' => break, // Padding indicates end of meaningful data
-            _ if b <= b' ' => continue, // Ignore whitespace (e.g. \n, \r, \t, space)
-            _ => return None, // Invalid character
+            b'=' => break, // パディングは意味のあるデータの終わりを示す
+            _ if b <= b' ' => continue, // 空白を無視する (例: \n, \r, \t, スペース)
+            _ => return None, // 無効な文字
         };
 
         buffer = (buffer << 6) | (val as u32);

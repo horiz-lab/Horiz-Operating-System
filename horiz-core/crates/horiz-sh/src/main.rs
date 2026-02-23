@@ -21,7 +21,7 @@ fn main() {
 
         let mut input = String::new();
         if io::stdin().read_line(&mut input).unwrap() == 0 {
-            break; // EOF
+            break; // ファイル終端 (EOF)
         }
 
         let input = input.trim();

@@ -1,5 +1,5 @@
 // --- SHA-256 + HMAC-SHA-256 (Zero-Dependency, local copy for horiz-pkg) ---
-// Duplicated from horiz-auth to keep horiz-pkg dependency-free.
+// horiz-pkg の依存関係をなくすため、horiz-auth から複製。
 
 const K: [u32; 64] = [
     0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,

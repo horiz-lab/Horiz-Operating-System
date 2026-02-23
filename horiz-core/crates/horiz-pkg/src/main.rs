@@ -15,7 +15,7 @@ mod base64;
 mod pem;
 mod x509;
 
-// --- Custom Argument Parser ---
+// --- カスタム引数パーサー ---
 struct Args {
     url: String,
     name: String,
@@ -65,7 +65,7 @@ fn parse_args() -> Result<Args, String> {
         return Err("Usage: horiz-pkg --url <URL> --name <NAME> [--pubkey <PATH>] [--trust <CA_PEM_PATH>]".into());
     }
 
-    // Default trust store if none provided
+    // 提供されていない場合のデフォルトのトラストストア
     if trust_store.is_empty() {
         if Path::new("/etc/horiz/certs.pem").exists() {
             trust_store.push("/etc/horiz/certs.pem".to_string());
@@ -75,8 +75,8 @@ fn parse_args() -> Result<Args, String> {
     Ok(Args { url, name, pubkey, trust_store })
 }
 
-// --- Minimal Custom HTTP/1.1 Client (Zero-Dependency) ---
-const MAX_RESPONSE_SIZE: usize = 100 * 1024 * 1024; // 100MB limit
+// --- 最小構成のカスタム HTTP/1.1 クライアント (依存関係なし) ---
+const MAX_RESPONSE_SIZE: usize = 100 * 1024 * 1024; // 100MB 制限
 
 fn http_get(url: &str, trust_store_keys: &[[u8; 32]]) -> io::Result<Vec<u8>> {
     // https:// は TLS 1.3 独自実装にルーティング
@@ -126,7 +126,7 @@ fn http_get(url: &str, trust_store_keys: &[[u8; 32]]) -> io::Result<Vec<u8>> {
 fn main() -> io::Result<()> {
     let args = parse_args().map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
     
-    // パストラバーサル対策 (Path Traversal Mitigation)
+    // パストラバーサル対策 (パストラバーサル対策)
     if args.name.contains('/') || args.name.contains('\\') || args.name.contains("..") {
         return Err(io::Error::new(io::ErrorKind::InvalidInput, "[エラー] 無効なパッケージ名です (パストラバーサルの試行を検知)。"));
     }
@@ -135,7 +135,7 @@ fn main() -> io::Result<()> {
     let tmp_path = format!("/tmp/{}.tmp", args.name);
     let sig_url = format!("{}.sig", args.url);
 
-    // Load Trust Store
+    // トラストストアの読み込み
     let mut trust_store_keys = Vec::new();
     for path in &args.trust_store {
         let content = fs::read_to_string(path)?;

@@ -1,5 +1,5 @@
 #!/bin/bash
-# scripts/build_iso.sh - Creates a bootable ISO image for HorizOS
+# scripts/build_iso.sh - HorizOS のブート可能なISOイメージを作成
 
 set -e
 

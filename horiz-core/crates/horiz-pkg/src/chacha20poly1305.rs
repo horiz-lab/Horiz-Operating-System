@@ -1,4 +1,4 @@
-// --- ChaCha20-Poly1305 AEAD (Zero-Dependency, RFC 8439) ---
+// --- ChaCha20-Poly1305 AEAD (依存関係なし, RFC 8439) ---
 
 fn quarterround(s: &mut [u32; 16], a: usize, b: usize, c: usize, d: usize) {
     s[a] = s[a].wrapping_add(s[b]); s[d] ^= s[a]; s[d] = s[d].rotate_left(16);
@@ -60,25 +60,25 @@ pub fn chacha20_encrypt(key: &[u8; 32], counter: u32, nonce: &[u8; 12], data: &[
 // ---- Poly1305 ----
 
 fn poly1305_mac(key: &[u8; 32], msg: &[u8]) -> [u8; 16] {
-    // r and s from key
+    // キーからの r と s
     let mut r = [0u8; 16];
     r.copy_from_slice(&key[..16]);
-    // clamp r
+    // r のクランプ
     r[3]  &= 15; r[7]  &= 15; r[11] &= 15; r[15] &= 15;
     r[4]  &= 252; r[8]  &= 252; r[12] &= 252;
 
     let mut s = [0u8; 16];
     s.copy_from_slice(&key[16..]);
 
-    // Convert r to u128 little-endian
+    // r を u128 リトルエンディアンに変換
     let r_val = u128::from_le_bytes(r);
     let s_val = u128::from_le_bytes(s);
 
     // P = 2^130 - 5
-    // We use 130-bit arithmetic via two u128 (lo + hi)
-    // Accumulate using simple per-block arithmetic
-    let _p: u128 = (1u128 << 127) - 1; // approximate; real poly1305 needs 130-bit
-    // Use 130-bit via (hi: u64, lo: u128) approach
+    // 2つの u128 (lo + hi) を介して130ビット演算を使用
+    // 単純なブロックごとの演算を使用して蓄積
+    let _p: u128 = (1u128 << 127) - 1; // 近似値; 実際の poly1305 は130ビット必要
+    // (hi: u64, lo: u128) アプローチによる130ビットの使用
     let mut acc_lo: u128 = 0;
     let mut acc_hi: u64  = 0;
 
@@ -91,29 +91,29 @@ fn poly1305_mac(key: &[u8; 32], msg: &[u8]) -> [u8; 16] {
         let n_lo = u128::from_le_bytes(n[..16].try_into().unwrap());
         let n_hi = n[16] as u64;
 
-        // acc += n  (130-bit)
+        // acc += n  (130ビット)
         let (new_lo, carry) = acc_lo.overflowing_add(n_lo);
         acc_lo = new_lo;
         acc_hi = acc_hi.wrapping_add(n_hi).wrapping_add(carry as u64);
 
-        // acc = acc * r  (130 × 128 → 258 bit, reduce mod 2^130-5)
-        // Use u128 multiplication with manual carry
+        // acc = acc * r  (130 × 128 → 258 ビット、mod 2^130-5 で縮小)
+        // 手動キャリーで u128 乗算を使用
         let r_lo = r0;
         let _r_hi = 0u64;
 
-        // 128x128 multiply: acc_lo * r_lo
+        // 128x128 乗算: acc_lo * r_lo
         let (p0, p1) = mul_u128_to_256(acc_lo, r_lo);
         // acc_hi * r_lo  (2x128 → 130)
         let ah_rlo_lo = (acc_hi as u128).wrapping_mul(r_lo);
-        // cross terms are zero because r_hi=0
+        // r_hi=0 であるため、交差項はゼロ
 
-        // Combine
-        let (_s0, _c1) = p0.overflowing_add(0u128); // just s0 = p0, c1 = 0
+        // 結合
+        let (_s0, _c1) = p0.overflowing_add(0u128); // 単に s0 = p0, c1 = 0
         let s0 = p0;
-        let s1 = p1.wrapping_add(ah_rlo_lo); // p1 + ah_rlo_lo (can't overflow since ah <= 3, r <= 2^124, so ah*r < 2^126)
+        let s1 = p1.wrapping_add(ah_rlo_lo); // p1 + ah_rlo_lo (ah <= 3, r <= 2^124 であるためオーバーフローしない、したがって ah*r < 2^126)
 
-        // Reduce mod 2^130-5:
-        // Value is s1 * 2^128 + s0
+        // mod 2^130-5 で縮小:
+        // 値は s1 * 2^128 + s0
         // s1 * 2^128 = (s1 >> 2) * 2^130 + (s1 & 3) * 2^128
         // ≡ (s1 >> 2) * 5 + (s1 & 3) * 2^128
         let mut c0 = s0;
@@ -133,16 +133,16 @@ fn poly1305_mac(key: &[u8; 32], msg: &[u8]) -> [u8; 16] {
         acc_hi = c1;
     }
 
-    // Final: acc += s mod 2^128
+    // 最終: acc += s mod 2^128
     let (final_lo, _) = acc_lo.overflowing_add(s_val);
-    // (ignore carry for Poly1305 final step, as per spec)
+    // (仕様に従い、Poly1305の最終ステップのキャリーを無視)
     let result = final_lo.to_le_bytes();
     let mut tag = [0u8; 16];
     tag.copy_from_slice(&result);
     tag
 }
 
-// Multiply two u128 → (lo: u128, hi: u128)
+// 2つの u128 を乗算 → (lo: u128, hi: u128)
 fn mul_u128_to_256(a: u128, b: u128) -> (u128, u128) {
     let a_lo = a as u64 as u128;
     let a_hi = (a >> 64) as u64 as u128;
@@ -179,7 +179,7 @@ fn pad16(data: &[u8]) -> Vec<u8> {
 
 fn le64(n: u64) -> [u8; 8] { n.to_le_bytes() }
 
-/// Encrypt + authenticate. Returns ciphertext || tag.
+/// 暗号化と認証。暗号文 || タグを返します。
 pub fn chacha20poly1305_encrypt(
     key: &[u8; 32],
     nonce: &[u8; 12],
@@ -203,7 +203,7 @@ pub fn chacha20poly1305_encrypt(
     out
 }
 
-/// Decrypt + verify. Returns Ok(plaintext) or Err on auth failure.
+/// 復号化と検証。Ok(平文) または認証失敗時に エラーを返します。
 pub fn chacha20poly1305_decrypt(
     key: &[u8; 32],
     nonce: &[u8; 12],
@@ -224,7 +224,7 @@ pub fn chacha20poly1305_decrypt(
 
     let expected_tag = poly1305_mac(&otk, &mac_data);
 
-    // Constant-time comparison
+    // 定数時間での比較
     let mut diff = 0u8;
     for (a, b) in expected_tag.iter().zip(tag_bytes.iter()) {
         diff |= a ^ b;

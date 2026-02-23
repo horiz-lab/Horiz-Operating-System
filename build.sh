@@ -1,9 +1,9 @@
 #!/bin/bash
 set -e
 
-# HorizOS Build Script
-# This script orchestrates the build process from scratch,
-# eliminating external base image dependencies for maximum ownership.
+# HorizOS ビルドスクリプト
+# このスクリプトはゼロからのビルドプロセスを調整・実行し、
+# 最大の所有権（オーナーシップ）のために外部ベースイメージの依存関係を排除します。
 
 ARCH="${ARCH:-x86_64}"
 

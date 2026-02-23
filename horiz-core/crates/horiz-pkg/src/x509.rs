@@ -1,5 +1,5 @@
 // --- Minimal X.509 DER Parser (Zero-Dependency) ---
-// Focused on Ed25519 certificates (OID 1.3.101.112)
+// Ed25519 証明書 (OID 1.3.101.112) に焦点を当てる
 
 pub struct X509Cert {
     pub tbs_der: Vec<u8>,        // To-be-signed data
@@ -87,7 +87,7 @@ pub fn parse_cert(der: &[u8]) -> Option<X509Cert> {
     public_key.copy_from_slice(&der[pos+1..pos+33]);
     let _ = spki_end;
 
-    // Skip to signatureValue in Certificate
+    // 証明書の signatureValue までスキップ
     pos = tbs_end;
     // signatureAlgorithm (AlgorithmIdentifier, skip)
     skip_der(der, &mut pos)?;
@@ -115,8 +115,8 @@ pub fn verify_chain(certs: &[Vec<u8>], trust_store: &[[u8; 32]]) -> Result<[u8; 
     let mut current_cert = parse_cert(&certs[0]).ok_or("Failed to parse leaf certificate")?;
     let leaf_pubkey = current_cert.public_key;
 
-    // In a real implementation we would iterate through certs[1..] and verify each.
-    // Here we check if the leaf is signed by any in trust_store or if the next in chain signs it.
+    // 実際の実装では、certs[1..] を反復処理してそれぞれを検証する。
+    // ここでは、リーフがトラストストア内のいずれかで署名されているか、チェーン内の次のものがそれに署名しているかを確認する。
     let mut verified = false;
     for &tc in trust_store {
         if current_cert.verify(&tc) {
@@ -130,7 +130,7 @@ pub fn verify_chain(certs: &[Vec<u8>], trust_store: &[[u8; 32]]) -> Result<[u8; 
             let issuer = parse_cert(&certs[i]).ok_or("Failed to parse issuer certificate")?;
             if current_cert.verify(&issuer.public_key) {
                 current_cert = issuer;
-                // Check if this issuer is trusted
+                // この発行者が信頼されているか確認する
                 for &tc in trust_store {
                     if current_cert.verify(&tc) {
                         verified = true;

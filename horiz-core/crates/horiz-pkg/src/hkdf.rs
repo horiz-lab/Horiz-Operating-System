@@ -1,6 +1,6 @@
 // --- HKDF-SHA-256 (Zero-Dependency, RFC 5869) ---
 //
-// Used for TLS 1.3 key schedule.
+// TLS 1.3 キースケジュールに使用。
 
 use crate::sha256::hmac_sha256;
 
@@ -10,7 +10,7 @@ pub fn hkdf_extract(salt: &[u8], ikm: &[u8]) -> [u8; 32] {
 }
 
 /// HKDF-Expand: OKM = T(1) || T(2) || ... (truncated to `len` bytes)
-/// len must be <= 255 * 32
+/// len は 255 * 32 以下でなければならない
 pub fn hkdf_expand(prk: &[u8; 32], info: &[u8], len: usize) -> Vec<u8> {
     let mut okm = Vec::with_capacity(len);
     let mut t: Vec<u8> = Vec::new();
@@ -47,7 +47,7 @@ pub fn hkdf_expand_label(secret: &[u8; 32], label: &[u8], context: &[u8], length
     hkdf_expand(secret, &hkdf_label, length as usize)
 }
 
-/// Derive-Secret(Secret, Label, Messages) = HKDF-Expand-Label(Secret, Label, Transcript-Hash(Messages), 32)
+/// Derive-Secret(シークレット, ラベル, メッセージ) = HKDF-Expand-Label(Secret, Label, Transcript-Hash(Messages), 32)
 pub fn derive_secret(secret: &[u8; 32], label: &[u8], transcript_hash: &[u8; 32]) -> [u8; 32] {
     let v = hkdf_expand_label(secret, label, transcript_hash, 32);
     let mut out = [0u8; 32];

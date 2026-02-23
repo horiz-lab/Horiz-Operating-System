@@ -1,7 +1,7 @@
 use std::fs;
 use std::io::{self, BufRead};
 
-// --- Custom SHA-256 Implementation (Zero-Dependency) ---
+// --- カスタム SHA-256 実装 (依存関係なし) ---
 
 const K: [u32; 64] = [
     0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
@@ -86,7 +86,7 @@ pub fn sha256(data: &[u8]) -> [u8; 32] {
     result
 }
 
-// --- Custom Base64 Implementation (Zero-Dependency) ---
+// --- カスタム Base64 実装 (依存関係なし) ---
 
 const BASE64_ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
@@ -121,7 +121,7 @@ pub fn base64_encode(data: &[u8]) -> String {
     result
 }
 
-// --- HorizOS Auth Logic (Restored with Zero-Dependency) ---
+// --- HorizOS 認証ロジック (依存関係なしで復元) ---
 
 pub fn hash_password(password: &str, salt: &str) -> String {
     let mut input = Vec::new();
