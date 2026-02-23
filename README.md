@@ -45,7 +45,7 @@ x86_64, aarch64, riscv64, powerpc64le, s390x, mips64el の主要 6 種類のア�
 
 ## コンポーネント・特徴
 
-- **Kernel**: Linux 6.19.2 (Source Built)
+- **Kernel**: Linux 6.19.3 (Source Built)
 - **Userland**: Horiz Core (Rust / musl Static Link / Zero-Dependency)
 - **Init**: horiz-init (Custom Implementation with **Service Supervision**)
 - **Security**: 独自実装の SHA-256/512, Ed25519 による署名検証と整合性チェック。
