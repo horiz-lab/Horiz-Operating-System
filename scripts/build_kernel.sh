@@ -3,7 +3,17 @@
 
 set -e
 
-KERNEL_VERSION="6.19.3"
+CONFIG_FILE="build_config.ini"
+if [ ! -f "${CONFIG_FILE}" ]; then
+    echo "[エラー] ${CONFIG_FILE} が見つかりません。"
+    exit 1
+fi
+# INIファイルの [kernel] セクションから version を抽出
+KERNEL_VERSION=$(awk -F '=' '/^\[kernel\]/{f=1} f&&/^version/{print $2; exit}' "${CONFIG_FILE}" | tr -d ' "\r')
+if [ -z "${KERNEL_VERSION}" ]; then
+    echo "[エラー] ${CONFIG_FILE} からカーネルバージョンが読み取れませんでした。"
+    exit 1
+fi
 KERNEL_URL="https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-${KERNEL_VERSION}.tar.xz"
 
 echo "Linux Kernel ${KERNEL_VERSION} ビルドプロセスを開始。"

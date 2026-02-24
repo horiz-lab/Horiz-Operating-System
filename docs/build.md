@@ -36,7 +36,7 @@ HorizOSは、セキュアで独立した運用ができるようスクラッチ�
 
 ### 2. カーネル構築 (`scripts/build_kernel.sh`)
 
-- Linux カーネル 6.19.3 のソースコードを取得します。
+- `build_config.ini` に指定されたバージョンの Linux カーネルのソースコードを取得します。
 - 指定されたアーキテクチャ向けにクロスコンパイラ用接頭辞（例: `aarch64-linux-gnu-`）をセットし、`defconfig` を元に最適化します。
 - ビルドが完了すると、`arch/<ARCH>/boot/` 内にカーネルイメージ（`bzImage`, `Image`, `zImage` 等）が生成されます。
 

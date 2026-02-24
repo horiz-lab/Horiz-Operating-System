@@ -10,12 +10,25 @@ BUILD_DIR="build/iso"
 ISO_DIR="${BUILD_DIR}/root"
 mkdir -p "${ISO_DIR}/boot/grub"
 
+CONFIG_FILE="build_config.ini"
+if [ ! -f "${CONFIG_FILE}" ]; then
+    echo "[エラー] ${CONFIG_FILE} が見つかりません。"
+    exit 1
+fi
+# INIファイルの [kernel] セクションから version を抽出
+KERNEL_VERSION=$(awk -F '=' '/^\[kernel\]/{f=1} f&&/^version/{print $2; exit}' "${CONFIG_FILE}" | tr -d ' "\r')
+if [ -z "${KERNEL_VERSION}" ]; then
+    echo "[エラー] ${CONFIG_FILE} からカーネルバージョンが読み取れませんでした。"
+    exit 1
+fi
+
+
 # 1. 必要なバイナリの確認
 if [ "$ARCH" = "x86_64" ]; then
-    KERNEL_IMAGE="build/linux-6.19.3/arch/x86/boot/bzImage"
+    KERNEL_IMAGE="build/linux-${KERNEL_VERSION}/arch/x86/boot/bzImage"
     GRUB_PLATFORM="i386-pc"
 elif [ "$ARCH" = "aarch64" ]; then
-    KERNEL_IMAGE="build/linux-6.19.3/arch/arm64/boot/Image"
+    KERNEL_IMAGE="build/linux-${KERNEL_VERSION}/arch/arm64/boot/Image"
     GRUB_PLATFORM="arm64-efi"
 elif [ "$ARCH" = "riscv64" ]; then
     echo "riscv64 は x86_64 ランナー環境での grub-efi モジュール制約により ISO ビルドをスキップします。"

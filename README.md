@@ -45,7 +45,7 @@ x86_64, aarch64, riscv64, powerpc64le, s390x, mips64el の主要 6 種類のア�
 
 ## コンポーネント・特徴
 
-- **Kernel**: Linux 6.19.3 (Source Built)
+- **Kernel**: Linux (Source Built, バージョンは `build_config.ini` に準拠)
 - **Userland**: Horiz Core (Rust / musl Static Link / Zero-Dependency)
 - **Init**: horiz-init (Custom Implementation with **Service Supervision**)
 - **Security**: 独自実装の SHA-256/512, Ed25519 による署名検証と整合性チェック。
@@ -61,7 +61,7 @@ x86_64, aarch64, riscv64, powerpc64le, s390x, mips64el の主要 6 種類のア�
 
 2. **カーネルの構築**:
     `bash scripts/build_kernel.sh`
-    Linux 6.19.3 をダウンロードし、WSL2/汎用向けにコンパイル。
+    設定ファイル（`build_config.ini`）に指定されたバージョンの Linux カーネルをダウンロードし、WSL2/汎用向けにコンパイル。
 
 3. **ISO イメージの生成**:
     `bash scripts/build_iso.sh`
